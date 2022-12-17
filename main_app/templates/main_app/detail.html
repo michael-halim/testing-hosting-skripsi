@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+{{ item.name }}
+{% endblock title %}
+
+{% block script_css %}
+<style>
+    body{
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+        background-color: #B9D7EA;
+        color: #0F4C75;
+    }
+    ::-webkit-scrollbar {
+        display: none;
+    }
+   
+    
+    .detail-wrapper {
+        background-color: white;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+        margin-top: 1rem;
+        border-radius: 22px;
+        min-height: 80vh;
+        margin-bottom: 100px;
+    }
+    
+    .detail-thumbnail{
+        border-radius: 32px;
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+    #likeBtn{
+        width: 90%;
+    }
+    @media only screen and (max-width: 768px) {
+       .detail-wrapper {
+            background-color: white;
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+            margin-top: 1rem;
+            border-radius: 22px;
+            min-height: 80vh;
+            margin-bottom: 100px;
+        }
+        .detail-thumbnail{
+            width: 95%;
+        }
+
+        .mlmr10{
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        .ml5{
+            margin-left: 5px;
+        }
+    }
+    .original-link-wrapper {
+        border-radius: 12px;
+        min-height: 250px;
+    }
+
+    .view-original-btn {
+        text-decoration: none;
+        border-radius: 8px;
+    }
+
+    .view-original-btn:hover {
+        background-color: #818cf8;
+        color: white;
+    }
+    .collapse-tab{
+        cursor: pointer;
+        transition: 0.3s ease-in-out;
+    }
+    .collapse-tab:hover{
+        transition: 0.3s ease-in-out;
+        transform: scale(1.03);
+    }
+    .custom-tooltip {
+        --bs-tooltip-bg: var(--bs-primary);
+    }
+</style>
+<script>
+    $(function () {
+        $('body').on('click','.collapse-tab',function(){
+            icon_object = $(this).find('.icon-collapse').first();
+            if (icon_object.hasClass('fa-plus')){
+                icon_object.removeClass('fa-plus');
+                icon_object.addClass('fa-minus');
+            }
+            else if (icon_object.hasClass('fa-minus')){
+                icon_object.removeClass('fa-minus');
+                icon_object.addClass('fa-plus');
+            }
+        });
+
+        $('body').on('click', '#likeBtn', debounce(function () {
+            $.ajax({
+                url: '/like/',
+                method: 'GET',
+                data: {
+                    has_liked: $('#likeBtn').data('hasliked'),
+                    current_url: window.location.href
+                },
+                success: function (result) {
+                    if ($('#likeBtn').data('hasliked') === 'False'){
+                        $('#likeBtn').html('<i class="fa-solid fa-heart" style="color: red"></i> Liked')
+                        $('#likeBtn').data('hasliked','True')
+
+                    }
+                    else {
+                        $('#likeBtn').html('<i class="fa-regular fa-heart"></i> Like')
+                        $('#likeBtn').data('hasliked','False')
+                    }
+                },
+                error: function (result) {
+
+                }
+            });
+        }, 500));
+
+        // Event Listener for Left Click or Middle Click View Original Link
+        $(document).on('mousedown', '.view-original-btn', function (e) {
+            if (e.which <= 2){
+                // alert();
+                $.ajax({
+                    url: '/viewOriginalLink/',
+                    method: 'GET',
+                    data: {
+                        current_url: window.location.href,
+                    },
+                    success: function (result) {
+                        if (e.which == 1){
+                            window.location.href = "{{ item.original_link }}";
+                        }
+                        else{
+                            window.open("{{ item.original_link }}",'_blank');
+                        }
+                    },
+                    error: function (result) {
+
+                    }
+                });
+            }
+        });
+
+        // Back Button Event Listener
+        if (window.history && window.history.pushState) {
+            window.history.pushState('', null, '');
+            $(window).on('popstate', function () {
+                $.ajax({
+                    url : '/previous/', 
+                    method : 'GET', 
+                    data : {
+                        current_url:window.location.href
+                    }, 
+                    success:function(result){
+                        // alert(result)
+                    },
+                    error:function(result){
+                        
+                    }
+                });
+                history.back();
+            });
+        }
+        
+        // Animate After Copied Phone
+        $('body').on('click','#phone', debounce(function(){
+            // console.log('phone');
+            const phone_number = $(this).val();
+            navigator.clipboard.writeText(phone_number);
+            $(this).val('Copied');
+            $(this).css({
+                'opacity':'0.5',
+            })
+            setTimeout(function(){
+                // alert('{{ item.phone }}');
+                $('#phone').val('{{ item.phone }}');
+                $('#phone').css({
+                    'opacity':'1.0',
+                });
+            }, 1000);
+
+            // debounce every half a second
+        }, 500));
+
+        // Animate After Copied Address
+        $('body').on('click','#address', debounce(function(){
+            console.log('address');
+            const address = $(this).val();
+            navigator.clipboard.writeText(address);
+            $(this).val('Copied');
+            $(this).css({
+                'opacity':'0.5',
+            })
+            setTimeout(function(){
+                // alert('{{ item.phone }}');
+                $('#address').val('{{ item.address }}');
+                $('#address').css({
+                    'opacity':'1.0',
+                });
+            }, 500);
+
+            // debounce every half a second
+        }, 500));
+
+    });
+</script>
+{% endblock script_css %}
+
+{% block content %}
+
+{% include 'includes/navbar.html' %}
+{% include 'includes/sidebar.html' %}
+
+<div class="container detail-wrapper mb-5" style="width: 90%;">
+    <div class="row">
+        <div class="col-md-3 col-12">
+            <div class="row d-flex justify-content-center">
+                <img src="{{ item.pic }}" alt="{{ item.name }}" class="detail-thumbnail">
+            </div>
+            <div class="row d-flex justify-content-center">
+                {% if has_liked %}
+                <button type="button" class="btn btn-outline-danger my-3" id="likeBtn" data-hasliked="{{has_liked}}">
+                    <i class="fa-solid fa-heart" style="color: red"></i>
+                    Liked
+                </button>
+                {% else %}
+                <button type="button" class="btn btn-outline-danger my-3" id="likeBtn" data-hasliked="{{has_liked}}">
+                    <i class="fa-regular fa-heart"></i>
+                    Like
+                </button>
+                {% endif %}
+            </div>
+
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-5 col-12 mt-sm-4 mt-2 my-5">
+            <h3 class="mlmr10">{{ item.name }}</h3>
+            <div class="text-secondary mlmr10">{{ item.furniture_location|title }}</div>
+            {% if item.isProduct %}
+                <span class="badge mlmr10" style="font-size: 10px; background-color: #0F4C75; color: white;">Product</span>
+            {% else %}
+                <span class="badge mlmr10" style="font-size: 10px; background-color: #B9D7EA; color:#0F4C75 ;">Service</span>
+            {% endif %}
+            <br>
+            
+            <h4 class="mlmr10">Rp. {{ item.price|intcomma }}</h4>
+
+            {% if item.description %}
+                <hr>
+                <div class="row collapse-tab ml5" data-bs-toggle="collapse" href="#description-collapse">
+                    <div class="col-6">
+                        <h4>Description </h4>
+                    </div>
+                    <div class="col-6 my-1 icon-collapse-wrapper">
+                        <i class="fa-solid fa-minus d-flex justify-content-end icon-collapse" style="padding-right: 20px;"></i>
+                    </div>
+                </div>
+                {% autoescape off %}
+                    <div class="collapse show mlmr10" id="description-collapse" style="text-align: justify;">
+                        {{ item.description|linebreaks}}
+                    </div>
+                {% endautoescape %}
+            {% endif %}
+
+            {% if item.additional_desc %}
+                <hr>
+                <div class="row collapse-tab ml5" data-bs-toggle="collapse" href="#additional-desc-collapse">
+                    <div class="col-6">
+                        <h4>Additional Description</h4>
+                    </div>
+                    <div class="col-6 my-1">
+                        <i class="fa-solid fa-plus d-flex justify-content-end icon-collapse" style="padding-right: 20px;"></i>
+                    </div>
+                </div>
+                {% autoescape off %}
+                    <div class="collapse mlmr10" id="additional-desc-collapse" style="text-align: justify;">
+                        {{ item.additional_desc|linebreaks }}
+                    </div>
+                {% endautoescape %}
+            {% endif %}
+
+            {% if item.dimension_length or item.dimension_width or item.dimension_height or item.color or item.material %}
+                <hr>
+                <div class="row collapse-tab ml5" data-bs-toggle="collapse" href="#spec-collapse">
+                    <div class="col-6">
+                        <h4>Specification</h4>
+                    </div>
+                    <div class="col-6 my-1">
+                        <i class="fa-solid fa-plus d-flex justify-content-end icon-collapse" style="padding-right: 20px;"></i>
+                    </div>
+                </div>
+                {% autoescape off %}
+                    <div class="collapse mlmr10" id="spec-collapse">
+                        {% if item.dimension_length %}
+                            Dimension Length : {{ item.dimension_length }} {{ item.dimension_unit }} <br>
+                        {% endif %}
+                        {% if item.dimension_width %}
+                            Dimension Width : {{ item.dimension_width }} {{ item.dimension_unit }} <br>
+                        {% endif %}
+                        {% if item.dimension_height %}
+                            Dimension Height : {{ item.dimension_height }} {{ item.dimension_unit }} <br>
+                        {% endif %}
+                        {% if item.color %}
+                            Color : {{ item.color }} <br>
+                        {% endif %}
+                        {% if item.material %}
+                            Material : {{ item.material }} <br>
+                        {% endif %}
+                        {% if item.weight %}
+                            Weight : {{ item.weight }} {{ item.weight_unit }} <br>
+                        {% endif %}
+                    </div>
+
+                    {% endautoescape %}
+            {% endif %}
+
+        </div>
+        <div class="col-md-3 col-12 mt-sm-4 original-link-wrapper">
+            <div class="row">
+                <div class="col-12 my-3">
+                    <input type="button" style="background-color: #0F4C75; color: white;" class="btn w-100" id="phone" value="{{item.phone}}">
+                        
+                </div>
+                <div class="col-12 my-3">
+                    <input type="button" style="background-color: #0F4C75; color: white;" class="btn w-100 text-wrap" id="address" value="{{item.address}}">
+                    
+                </div>
+                <div class="col-12">
+                    <a href="{{ item.original_link }}" style="background-color: #0F4C75; color: white;" 
+                        class="btn btn-sm w-100 p-3 view-original-btn">
+                        View Original Link
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>  
+
+</div>
+{% endblock content %}

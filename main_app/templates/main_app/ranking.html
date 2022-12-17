@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Ranking
+{% endblock title %}
+
+{% block script_css %}
+
+{% endblock script_css %}
+
+{% block content %}
+{% include 'includes/navbar.html' %}
+
+
+<div class="container">
+    {{user}}
+    <br>
+    {{user.is_staff}}
+    <br>
+    MRR @ K => {{mrr}}
+    <br>
+    NDCG @ K => {{ndcg}}
+</div>
+
+{% endblock content %}

@@ -1,0 +1,189 @@
+{% block script_css %}
+ <script>
+    $(function () {
+        $('body').on('click', 'input[type="checkbox"]', function () {
+            $(this).blur();
+        });
+        $('body').on('click','#submit-question, .btn-close',function(){
+            const first_answer = [];
+            $('input.first-question:checkbox:checked').each(function () {
+                first_answer.push($(this).val());
+            });
+            const second_answer = [];
+            $('input.second-question:checkbox:checked').each(function () {
+                second_answer.push($(this).val());
+            });
+            const third_answer = [];
+            $('input.third-question:checkbox:checked').each(function () {
+                third_answer.push($(this).val());
+            });
+            console.log(first_answer);
+            console.log(second_answer);
+            console.log(third_answer);
+
+            $.ajax({
+                url : '/', 
+                method : 'POST', 
+                data : {
+                    first_answer: first_answer,
+                    second_answer: second_answer,
+                    third_answer: third_answer,
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                }, 
+                success:function(result){
+                    $('#question3').modal('hide');
+                },
+                error:function(result){}
+            });
+        });
+        $('#question1').modal('{{is_show_modal}}' === 'True' ? 'show' : 'hide');
+    });
+</script>
+<style>
+#submit-question{
+    background-color: #BBE1FA;
+    border-color: #BBE1FA;
+    color: #0F4C75;
+}
+</style>
+{% endblock script_css %}
+
+<div class="modal fade" id="question1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Question 1</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h3>
+                    What room do you want to find products in ?
+                </h3>
+                <div class="my-5"></div>
+                <div class="row">
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="kamar-mandi" id="kamar-mandi" value="kamar mandi">
+                        <label class="btn w-100" for="kamar-mandi">Kamar Mandi</label>
+                    </div>
+                    
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="kamar-tidur" id="kamar-tidur" value="kamar tidur">
+                        <label class="btn w-100" for="kamar-tidur">Kamar Tidur</label>
+                    </div>
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="ruang-makan" id="ruang-makan" value="ruang makan">
+                        <label class="btn w-100" for="ruang-makan">Ruang Makan</label>
+                    </div>
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="dapur" id="dapur" value="dapur">
+                        <label class="btn w-100" for="dapur">Dapur</label>
+                    </div>
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="ruang-keluarga" id="ruang-keluarga"
+                            value="ruang keluarga">
+                        <label class="btn w-100" for="ruang-keluarga">Ruang Keluarga</label>
+                    </div>
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check first-question" 
+                                name="ruang-tamu" id="ruang-tamu" value="ruang tamu">
+                        <label class="btn w-100" for="ruang-tamu">Ruang Tamu</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-target="#question2" 
+                        data-bs-toggle="modal">
+                    Next Question
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="question2" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Question 2</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h3>What color are you looking for ?</h3>
+                {% for color in colors %}
+                    <input type="checkbox" class="btn-check second-question p-2" 
+                        name="options-outlined" id="{{color}}" value="{{color}}">
+                    <label class="btn btn-outline-primary" for="{{color}}">{{ color|title }}</label>
+                {% endfor %}
+            </div>
+            <div class="modal-footer row">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-secondary" 
+                                    data-bs-target="#question1" 
+                                    data-bs-toggle="modal">
+                                Previous Question
+                            </button>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                            <button class="btn btn-secondary" 
+                                    data-bs-target="#question3" 
+                                    data-bs-toggle="modal">
+                                Next Question
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="question3" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Question 3</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h3> Are you looking for a product or service ?</h3>
+                <div class="my-5"></div>
+                <div class="row">
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check third-question" 
+                                name="product-or-service" id="product" value="product">
+                        <label class="btn w-100" for="product">Product</label>
+                    </div>
+                    <div class="col-2">
+                        <input type="checkbox" class="btn-check third-question" 
+                                name="product-or-service" id="service" value="service">
+                        <label class="btn w-100" for="service">Service</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer row">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-6 d-flex justify-content-start">
+                            <button class="btn btn-secondary" 
+                                data-bs-target="#question2"
+                                data-bs-toggle="modal">
+                                Previous Question
+                            </button>
+                            &nbsp;
+                        </div>
+                        {% csrf_token %}
+                        <div class="col-6 d-flex justify-content-end">
+                            <button class="btn btn-success" id="submit-question">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

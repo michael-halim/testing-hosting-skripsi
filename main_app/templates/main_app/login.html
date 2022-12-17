@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Login
+{% endblock title %}
+
+{% block script_css %}
+<script src="{% static 'main_app/login.js' %}"></script>
+<link rel="stylesheet" href="{% static 'main_app/login.css' %}">
+{% endblock script_css %}
+
+{% block content %}
+
+<div class="wrapper">
+    <div class="title-text">
+        <div class="title login">
+            <img src="{% static 'main_app/find-me-blue-ver.png' %}" width="200" alt="">
+        </div>
+        <div class="title signup">
+            <img src="{% static 'main_app/find-me-blue-ver.png' %}" width="120" alt="">
+        </div>
+    </div>
+    <div class="form-container">
+        <div class="slide-controls">
+            <input type="radio" name="slide" id="login" {% if margin_left == 0  %} checked {% endif %}>
+            <input type="radio" name="slide" id="signup" {% if margin_left == -50  %} checked {% endif %}>
+            <label for="login" class="slide login">Login</label>
+            <label for="signup" class="slide signup">Signup</label>
+            <div class="slider-tab"></div>
+        </div>
+        {% if form.errors %}
+            {{ form.errors.username }}
+            {{ form.errors.email }}
+            {{ form.errors.password2 }}
+        {% endif %}
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        
+        <div class="form-inner">
+            <form action="" class="login" method="POST" style="margin-left:{{margin_left}}%;">
+                {% csrf_token %}
+                <div class="field">
+                    <input type="text"
+                        placeholder="Username"
+                        name="username"
+                        {% if input_username != "" %}
+                            value="{{input_username}}"
+                            onfocus="var temp_value = this.value; this.value=''; this.value=temp_value"
+                            autofocus
+                        {% endif %}
+                        required >
+                </div>
+                <div class="field">
+                    <input type="password" placeholder="Password" name="password" required>
+                </div>
+                <div class="field btn">
+                    <div class="btn-layer"></div>
+                    <input type="submit" value="Login">
+                </div>
+            </form>
+            <form action="" class="signup" method="POST" id="signup">
+                
+                {% csrf_token %}
+                <div class="field">
+                    {{form.username}}
+                </div>
+                <div class="field">
+                    {{form.email}}
+                </div>
+                <div class="field">
+                    {{form.password1}}
+                </div>
+                <div class="field">
+                    {{form.password2}}
+                </div>
+                <div class="field btn">
+                    <div class="btn-layer"></div>
+                    <input type="submit" value="Signup">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

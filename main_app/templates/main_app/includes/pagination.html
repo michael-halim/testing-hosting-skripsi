@@ -1,0 +1,101 @@
+{% load custom_tags %}
+
+{% block scripts_css %}
+<style>
+
+.pagination > li > a
+{
+    background-color: #0F4C75;
+    color: #fff;
+}
+
+.pagination > li > a:focus,
+.pagination > li > a:hover,
+.pagination > li > span:focus,
+.pagination > li > span:hover
+{
+    opacity: 90%;
+    color: white;
+    background-color: #0F4C75;
+}
+
+
+</style>
+{% endblock scripts_css %}
+
+<ul class="pagination">
+  {% if page_obj.has_previous %}
+  <li class="page-item">
+    <a class="page-link" 
+      href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page=1{% else %}?page=1{% endif %}"  >
+      First
+    </a>
+  </li>
+  {% if not is_mobile %}
+    {% if page_obj.number|add:-4 > 1 %}
+    <li class="page-item" aria-current="page">
+      <a class="page-link"  
+        href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.number|add:-4 }}{% else %}?page={{ page_obj.number|add:-4 }}{% endif %}">
+          {{ page_obj.number|add:-4 }}
+      </a>
+    </li>
+    {% endif %} 
+
+    {% if page_obj.number|add:-2 > 1 %}
+    <li class="page-item" aria-current="page">
+      <a class="page-link" 
+        href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.number|add:-2 }}{% else %}?page={{ page_obj.number|add:-2 }}{% endif %}">
+        {{ page_obj.number|add:-2 }}
+      </a>
+    </li>
+    {% endif %} 
+  {% endif %}
+
+  <li class="page-item" aria-current="page">
+    <a class="page-link" 
+      href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.previous_page_number }}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}">
+      Previous
+    </a>
+  </li>
+
+  {% endif %}
+  <li class="page-item disabled">
+    <a class="page-link">
+      {{page_obj.number}} of {{ page_obj.paginator.num_pages }}</a>
+  </li>
+
+  {% if page_obj.has_next %}
+  <li class="page-item">
+    <a class="page-link" 
+      href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.next_page_number }}{% else %}?page={{ page_obj.next_page_number }}{% endif %}">
+      Next
+    </a>
+  </li>
+  {% if not is_mobile %}
+    {% if page_obj.number|add:2 < page_obj.paginator.num_pages %}
+    <li class="page-item" aria-current="page">
+      <a class="page-link" 
+        href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.number|add:2 }}{% else %}?page={{ page_obj.number|add:2 }}{% endif %}">
+        {{ page_obj.number|add:2 }}
+      </a>
+    </li>
+    {% endif %} 
+
+    {% if page_obj.number|add:4 < page_obj.paginator.num_pages %}
+    <li class="page-item" aria-current="page">
+      <a class="page-link" 
+        href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.number|add:4 }}{% else %}?page={{ page_obj.number|add:4 }}{% endif %}">
+        {{ page_obj.number|add:4 }}
+      </a>
+    </li>
+    {% endif %} 
+  {% endif %}
+  
+  <li class="page-item">
+    <a class="page-link" 
+      href="{% if 'search' in request.get_full_path %}{{request.get_full_path|remove_substr_regex:'&page=(?:\d+)%&'}}&page={{ page_obj.paginator.num_pages }}{% else %}?page={{ page_obj.paginator.num_pages }}{% endif %}">
+      Last
+    </a>
+  </li>
+  {%endif %}
+</ul>

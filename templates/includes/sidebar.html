@@ -1,0 +1,217 @@
+{% load static %}
+
+{% block scripts_css %}
+<style>
+@media screen and (max-width: 480px) {
+    .offcanvas{
+        max-width: 75%;
+    }
+}
+.offcanvas{
+    max-width: 330px;
+    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;
+    background: #0F4C75;
+    color: white;
+}
+.menu{
+    margin: 20px 0;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.dropdown-category{
+    margin: 10px 20px;
+
+}
+
+.logout-menu{
+    margin: 20px 0;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: #BBE1FA;
+    /* color: #000; */
+    color: #212529;
+    font-weight: bold;
+}
+
+.hr-sidebar{
+    border-top: 5px solid #fff;
+    border-radius: 24px;
+}
+.selected{
+    background: #fff;
+    border-radius: 6px;
+    color: #0F4C75;
+}
+.menu:hover{
+    background: #fff;
+    color: #0F4C75;
+}
+</style>
+
+<script>
+    function toggleCaretIcon(){
+        if ($('#icon-category-dropdown > i').hasClass('fa-caret-up')) {
+            $("#icon-category-dropdown > i").animate({
+                deg: 180,
+
+            }, 50, function () {
+                $('#icon-category-dropdown > i').removeClass('fa-caret-up');
+                $('#icon-category-dropdown > i').addClass('fa-caret-down');
+            });
+            
+        } else {
+            $("#icon-category-dropdown > i").animate({
+                deg: 180,
+
+            }, 50, function () {
+                $('#icon-category-dropdown > i').removeClass('fa-caret-down');
+                $('#icon-category-dropdown > i').addClass('fa-caret-up');
+            });
+            
+        }
+    }
+    $(function () {
+
+        if ('{{request.path}}'.includes('category')) {
+            $('.dropdown-category').show();  
+            $('#icon-category-dropdown > i').addClass('fa-caret-up')
+        } 
+        else{
+            $('.dropdown-category').hide();
+            $('#icon-category-dropdown > i').addClass('fa-caret-down')
+
+        }
+
+        $('body').on('click','#category',function(){
+            // $('.dropdown-category').css({
+            //    'animation': 'fadeIn 1s'
+            // });
+            $('.dropdown-category').slideToggle('slow');
+            toggleCaretIcon();
+
+        });
+        $('body').on('click','#logout',function(){
+            if (confirm('Are You Sure You Want to Logout ?')){
+                window.location.href = "{% url 'main_app:logout' %}"
+            }
+        });
+    });
+</script>
+{% endblock scripts_css %}
+<div class="offcanvas offcanvas-start" data-bs-scroll="true" id="sidebar">
+    <div class="offcanvas-header">
+        <a href="{% url 'main_app:home' %}">
+            <img src="{% static 'main_app/find-me-white-ver.png' %}" width="120" alt="">
+        </a>
+        <div class="btn text-white" data-bs-dismiss="offcanvas">
+            <i class="fa-solid fa-bars" ></i>
+        </div>
+    </div>
+    <div class="offcanvas-body">
+        <div class="col-12">
+            <div class="row text-center">
+                <p><b>Hi, {{ user }}</b></p>
+            </div>
+            
+        </div>
+        <hr class="hr-sidebar">
+        <a class="dropdown-item {% if request.path == '/' %} selected {% endif %}" href="{% url 'main_app:home' %}">
+            <div class="row menu">
+                <div class="col-2">
+                    <i class="fa-solid fa-house"></i>
+                </div>
+                <div class="col-10">
+                    Home
+                </div>
+            </div>
+        </a>
+        <div class="row menu" id="category">
+            <div class="col-2">
+                <i class="fa-solid fa-clipboard"></i>
+            </div>
+            <div class="col-8">
+                Category
+            </div>
+            <div class="col-2" id="icon-category-dropdown">
+                <i class="fa-solid"></i>
+            </div>
+        </div>
+        <div class="wrapper-dropdown-category">
+            <a class="dropdown-item {% if 'kamar-mandi' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'kamar-mandi' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-faucet-drip"></i>
+                    </div>
+                    <div class="col-10">
+                        Kamar Mandi
+                    </div>
+                </div>
+            </a>
+            <a class="dropdown-item {% if 'kamar-tidur' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'kamar-tidur' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
+                    <div class="col-10">
+                        Kamar Tidur
+                    </div>
+                </div>
+            </a>
+            <a class="dropdown-item {% if 'ruang-makan' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'ruang-makan' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-utensils"></i>
+                    </div>
+                    <div class="col-10">
+                        Ruang Makan
+                    </div>
+                </div>
+            </a>
+
+            <a class="dropdown-item {% if 'dapur' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'dapur' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-kitchen-set"></i>
+                    </div>
+                    <div class="col-10">
+                        Dapur
+                    </div>
+                </div>
+            </a>
+            <a class="dropdown-item {% if 'ruang-keluarga' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'ruang-keluarga' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-people-roof"></i>
+                    </div>
+                    <div class="col-10">
+                        Ruang Keluarga
+                    </div>
+                </div>
+            </a>
+            <a class="dropdown-item {% if 'ruang-tamu' in request.path %} selected {% endif %}" href="{% url 'main_app:category-page' 'ruang-tamu' %}">
+                <div class="row menu dropdown-category">
+                    <div class="col-2">
+                        <i class="fa-solid fa-person-shelter"></i>
+                    </div>
+                    <div class="col-10">
+                        Ruang Tamu
+                    </div>
+                </div>
+            </a>
+        </div>
+        <hr class="hr-sidebar">
+        <a class="dropdown-item" id="logout">
+            <div class="row logout-menu">
+                <div class="col-2">
+                    <i class="fa-solid fa-power-off"></i>
+                </div>
+                <div class="col-10">
+                    Logout
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
