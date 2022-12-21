@@ -48,7 +48,7 @@ class Item(models.Model):
     vect_name = models.TextField(max_length=4000, null=True)
     vect_color = models.TextField(max_length=500, null=True)
     vect_material = models.TextField(max_length=4000, null=True)
-    vect_description = models.TextField(max_length=20000, null=True)
+    vect_description = models.TextField(max_length=10000, null=True)
     vect_furniture_location = models.TextField(max_length=100, null=True)
     
     normalized_price = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
