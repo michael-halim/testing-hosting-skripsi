@@ -1,7 +1,5 @@
 from django.db import models
-from datetime import datetime
 from django.contrib.auth.models import User
-from django_hashids import HashidsField
 
 class Log(models.Model):
     user_id = models.IntegerField()
@@ -96,3 +94,11 @@ class Recommendation(models.Model):
     product_id = models.IntegerField()
     rank = models.IntegerField()
     created_at = models.DateTimeField()
+
+class ItemDetail(models.Model):
+    product_id = models.IntegerField()
+    views = models.IntegerField()
+    likes = models.IntegerField()
+    see_original = models.IntegerField()
+    copied_phone = models.IntegerField()
+    copied_address = models.IntegerField()

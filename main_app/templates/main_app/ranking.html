@@ -6,21 +6,79 @@ Ranking
 {% endblock title %}
 
 {% block script_css %}
+<style>
+    body {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+        background-color: #B9D7EA;
+    }
 
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    .input-group-append {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    $(function () {
+        $('#datepicker').datepicker();
+        $('body').on('change', '#start_at, #end_at', function () {
+            alert();
+        });
+    });
+</script>
 {% endblock script_css %}
 
 {% block content %}
 {% include 'includes/navbar.html' %}
+{% include 'includes/sidebar.html' %}
 
 
 <div class="container">
-    {{user}}
-    <br>
-    {{user.is_staff}}
-    <br>
-    MRR @ K => {{mrr}}
-    <br>
-    NDCG @ K => {{ndcg}}
+    <form action="{% url 'main_app:ranking' %}" method="GET">
+        <div class="row">
+            <div class="col-12 col-sm-5">
+                <label for="start_at">Start At</label>
+                <input id="start_at" name="start_at" class="form-control" type="date"
+                    value="{% if request.GET.start_at %}{{request.GET.start_at}}{% endif %}" />
+            </div>
+
+            <div class="col-12 col-sm-5">
+                <label for="end_at">End At</label>
+                <input id="end_at" name="end_at" class="form-control" type="date"
+                    value="{% if request.GET.end_at %}{{request.GET.end_at}}{% endif %}" />
+            </div>
+
+            <div class="col-12 col-sm-1 mt-4">
+                <input type="submit" class="btn btn-success">
+            </div>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">User ID</th>
+                <th scope="col">MRR@K</th>
+                <th scope="col">NDCG@K</th>
+                <th scope="col">Username</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in user_data %}
+            <tr>
+                {% for u in user %}
+                <td scope="row">{{u}}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 {% endblock content %}

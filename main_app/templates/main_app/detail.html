@@ -85,6 +85,9 @@
 </style>
 <script>
     $(function () {
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+
         $('body').on('click','.collapse-tab',function(){
             icon_object = $(this).find('.icon-collapse').first();
             if (icon_object.hasClass('fa-plus')){
@@ -97,13 +100,14 @@
             }
         });
 
-        $('body').on('click', '#likeBtn', debounce(function () {
+        $('body').on('click', '#likeBtn', function () {
             $.ajax({
                 url: '/like/',
-                method: 'GET',
+                method: 'POST',
                 data: {
                     has_liked: $('#likeBtn').data('hasliked'),
-                    current_url: window.location.href
+                    current_url: window.location.href,
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (result) {
                     if ($('#likeBtn').data('hasliked') === 'False'){
@@ -120,7 +124,7 @@
 
                 }
             });
-        }, 500));
+        });
 
         // Event Listener for Left Click or Middle Click View Original Link
         $(document).on('mousedown', '.view-original-btn', function (e) {
@@ -169,41 +173,78 @@
         }
         
         // Animate After Copied Phone
-        $('body').on('click','#phone', debounce(function(){
-            // console.log('phone');
+        $('body').on('click', '#phone', debounce(function () {
             const phone_number = $(this).val();
             navigator.clipboard.writeText(phone_number);
+
             $(this).val('Copied');
             $(this).css({
-                'opacity':'0.5',
+                'opacity': '0.5',
             })
-            setTimeout(function(){
+            setTimeout(function () {
                 // alert('{{ item.phone }}');
                 $('#phone').val('{{ item.phone }}');
                 $('#phone').css({
-                    'opacity':'1.0',
+                    'opacity': '1.0',
                 });
             }, 1000);
+
+            $.ajax({
+                url: '/copy/',
+                method: 'POST',
+                data: {
+                    current_url: window.location.href,
+                    type: 'PHONE',
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (result) {
+                    if (result.message === 'error') {
+                        alert('There\'s Something Wrong, Please Wait a Moment');
+                    }
+
+                },
+                error: function (result) {
+                    alert('There\'s Something Wrong, Please Wait a Moment');
+                }
+            });
 
             // debounce every half a second
         }, 500));
 
         // Animate After Copied Address
-        $('body').on('click','#address', debounce(function(){
-            console.log('address');
+        $('body').on('click', '#address', debounce(function () {
             const address = $(this).val();
             navigator.clipboard.writeText(address);
+
             $(this).val('Copied');
             $(this).css({
-                'opacity':'0.5',
+                'opacity': '0.5',
             })
-            setTimeout(function(){
+            setTimeout(function () {
                 // alert('{{ item.phone }}');
                 $('#address').val('{{ item.address }}');
                 $('#address').css({
-                    'opacity':'1.0',
+                    'opacity': '1.0',
                 });
             }, 500);
+
+            $.ajax({
+                url: '/copy/',
+                method: 'POST',
+                data: {
+                    current_url: window.location.href,
+                    type: 'ADDRESS',
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (result) {
+                    if (result.message === 'error') {
+                        alert('There\'s Something Wrong, Please Wait a Moment');
+                    }
+                },
+                error: function (result) {
+                    alert('There\'s Something Wrong, Please Wait a Moment');
+                }
+            });
 
             // debounce every half a second
         }, 500));
@@ -235,6 +276,7 @@
                     Like
                 </button>
                 {% endif %}
+                {% csrf_token %}
             </div>
 
         </div>
@@ -323,14 +365,30 @@
         </div>
         <div class="col-md-3 col-12 mt-sm-4 original-link-wrapper">
             <div class="row">
-                <div class="col-12 my-3">
-                    <input type="button" style="background-color: #0F4C75; color: white;" class="btn w-100" id="phone" value="{{item.phone}}">
-                        
-                </div>
-                <div class="col-12 my-3">
-                    <input type="button" style="background-color: #0F4C75; color: white;" class="btn w-100 text-wrap" id="address" value="{{item.address}}">
-                    
-                </div>
+                {% if item.phone %}
+                <span class="d-inline-block" 
+                            data-bs-toggle="popover" 
+                            data-bs-trigger="hover" 
+                            data-bs-content="Click to Copy">
+                    <div class="col-12 my-3">
+                        <input type="button" style="background-color: #0F4C75; color: white;" 
+                                class="btn w-100" id="phone" value="{{item.phone}}">
+                    </div>
+                </span>
+                {% endif %}
+                
+                {% if item.address %}
+                <span class="d-inline-block" 
+                            data-bs-toggle="popover" 
+                            data-bs-trigger="hover" 
+                            data-bs-content="Click to Copy">
+                    <div class="col-12 my-3">
+                        <input type="button" style="background-color: #0F4C75; color: white;" 
+                                class="btn w-100 text-wrap" id="address" value="{{item.address}}">
+                    </div>
+                </span>
+                {% endif %}
+
                 <div class="col-12">
                     <a href="{{ item.original_link }}" style="background-color: #0F4C75; color: white;" 
                         class="btn btn-sm w-100 p-3 view-original-btn">
@@ -338,9 +396,7 @@
                     </a>
                 </div>
             </div>
-
         </div>
     </div>  
-
 </div>
 {% endblock content %}

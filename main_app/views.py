@@ -14,7 +14,7 @@ from django.db.models import Q, Max, Min
 
 from .forms import CreateUserForm
 from .decorators import unauthenticated_user
-from .models import Item, Log, Like, Distance, Recommendation, User
+from .models import Item, Log, Like, Distance, Recommendation, User, ItemDetail
 from .helper import *
 
 import math
@@ -297,12 +297,29 @@ class DetailPostView(LoginRequiredMixin,View):
     redirect_field_name = '/'
     
     def get(self, request, slug, rank):
-        print_help('GET IN DETAIL POST VIEWS')
+        print_help('ENTER DETAIL POST VIEWS')
         item = Item.objects.get(slug=slug)
         key = b'gAAAAABjXkfW2XopKy1P1GCvCcMJM2zjsnGQP0DatJo='
         fernet = Fernet(key)
 
         rank = fernet.decrypt(rank.encode('utf-8')).decode('utf-8')
+
+        item_detail = ItemDetail.objects.filter(product_id = item.id)
+
+        print_help(item_detail, 'ITEM DETAIL DETAIL PAGE')
+        if len(item_detail) <= 0:
+            create_item_detail = ItemDetail(product_id=item.id, 
+                                            views=1,
+                                            likes=0,
+                                            see_original=0,
+                                            copied_phone=0,
+                                            copied_address=0)
+            create_item_detail.save()
+
+        else:
+            item_detail[0].views += 1
+            item_detail[0].save()
+
 
         # Log User With Event Type CLICK
         log = Log(user_id = request.user.id, 
@@ -328,6 +345,73 @@ class AboutView(LoginRequiredMixin,View):
     def get(self,request):
         context = {}
         return render(request, 'main_app/about.html',context)
+
+class FavoriteView(LoginRequiredMixin, View):
+    login_url = '/login/'
+    redirect_field_name = '/'
+
+    def get(self,request):
+        print_help('ENTER FAVORITE VIEWS')
+
+        liked_item = Like.objects.filter(user_id=request.user.id)
+        liked_item_ids = [ record.product_id  for record in liked_item ]
+
+        item_object = Item.objects.in_bulk(liked_item_ids)
+        all_items = [ item_object[item] for item in item_object ]
+
+        p = Paginator(all_items, 20)  # creating a paginator object
+    
+        # getting the desired page number from url
+        page_number = request.GET.get('page')
+        try:
+            # returns the desired page object
+            page_obj = p.get_page(page_number)  
+        except PageNotAnInteger:
+            # if page_number is not an integer then assign the first page
+            page_obj = p.page(1)
+        except EmptyPage:
+            # if page is empty then return last page
+            page_obj = p.page(p.num_pages)
+
+        
+        print_help(all_items,'ALL FAVORITE ITEMS')        
+        
+        context = { 'page_obj':page_obj, 'all_items':all_items}
+
+        return render(request, 'main_app/favorite.html',context)
+
+def handle_copy(request):
+    if request.POST:
+        print_help('POST HANDLE COPY VIEWS')
+        
+        full_url = request.POST['current_url']
+        
+        # Get Slug from URL
+        slug = full_url.split('/')[-2]
+
+        # Get Item ID by Slug
+        item = Item.objects.get(slug=slug)
+
+        item_detail = ItemDetail.objects.get(product_id=item.id)
+
+        if request.POST['type'] == 'PHONE':
+            item_detail.copied_phone += 1
+        elif request.POST['type'] == 'ADDRESS':
+            item_detail.copied_address += 1
+        
+        item_detail.save()
+
+        context = {
+            'message':'success'
+        }
+        return JsonResponse(context)
+
+
+    context = {
+        'message':'error'
+    }
+
+    return JsonResponse(context)
 
 @unauthenticated_user
 def categoryPage(request,category):
@@ -495,45 +579,80 @@ def view_original_link(request):
 
     log.save()
 
+    item_detail = ItemDetail.objects.filter(product_id = item.id)
+
+    print_help(item_detail, 'ITEM DETAIL VIEW ORIGINAL LINK')
+    if len(item_detail) <= 0:
+        create_item_detail = ItemDetail(product_id=item.id, 
+                                        views=1,
+                                        likes=0,
+                                        see_original=1,
+                                        copied_phone=0,
+                                        copied_address=0)
+        create_item_detail.save()
+
+    else:
+        item_detail[0].see_original += 1
+        item_detail[0].save()
+
     data = {
         'message': 'success',
         'redirect_url': item.original_link,
     }
     return JsonResponse(data)
 
-@unauthenticated_user
 def product_liked(request):
-    # Get Current URL
-    full_url = request.GET['current_url']
-    print_help('PRODUCT LIKED VIEWS')
-    # Get Slug from URL
-    slug = full_url.split('/')[-2]
 
-    # Get Item ID by Slug
-    item = Item.objects.get(slug=slug)
+    if request.POST:
+        # Get Current URL
+        full_url = request.POST['current_url']
+        print_help('PRODUCT LIKED VIEWS')
+        # Get Slug from URL
+        slug = full_url.split('/')[-2]
 
-    has_liked = True if request.GET['has_liked'] == 'True' else False
+        # Get Item ID by Slug
+        item = Item.objects.get(slug=slug)
 
-    # If has liked then unlike, if not then like
-    if has_liked: 
-        Like.objects.filter(user_id = request.user.id, product_id = item.id).delete()
-        Log.objects.filter(user_id = request.user.id, event_type='LIKE', product_id = item.id).delete()
+        has_liked = True if request.POST['has_liked'] == 'True' else False
 
-    else: 
-        now = datetime.now(ZoneInfo('Asia/Bangkok'))
-        Like(user_id = request.user.id, product_id = item.id).save()
-        Log(user_id = request.user.id, 
-                event_type='LIKE', 
-                product_id = item.id, 
-                timestamp_in = now,
-                timestamp_out = now,
-                timestamp_delta = 0.00).save()
+        item_detail = ItemDetail.objects.get(product_id = item.id)
+        
+        # If has liked then unlike, if not then like
+        if has_liked: 
+            print_help('DELETE LIKES')
+            Like.objects.filter(user_id = request.user.id, product_id = item.id).delete()
+            Log.objects.filter(user_id = request.user.id, event_type='LIKE', product_id = item.id).delete()
 
-    data = {
-        'message': 'success',
-        'has_liked':has_liked,
+            # Subtract Likes in Item Detail
+            item_detail.likes -= 1
+            item_detail.save()
+
+        else: 
+            now = datetime.now(ZoneInfo('Asia/Bangkok'))
+            Like(user_id = request.user.id, product_id = item.id).save()
+            Log(user_id = request.user.id, 
+                    event_type='LIKE', 
+                    product_id = item.id, 
+                    timestamp_in = now,
+                    timestamp_out = now,
+                    timestamp_delta = 0.00).save()
+
+            # Add Likes in Item Detail
+            item_detail.likes += 1
+            item_detail.save()
+
+        context = {
+            'message': 'success',
+            'has_liked':has_liked,
+        }
+
+        return render(request,'main_app/detail.html',context)
+
+    context = {
+        'message': 'unsuccessful',
     }
-    return JsonResponse(data)
+
+    return render(request,'main_app/detail.html',context)
 
 
 def machine_learning(request):
@@ -1154,56 +1273,80 @@ def print_help(var, title=''):
 @login_required(login_url='main_app:home')
 def ranking(request):
     if request.user.is_staff:
+
         try:
+            start_at = '2022-12-16'
+            end_at = '2022-12-22' 
+
+            try: start_at =  request.GET['start_at'] if request.GET['start_at'] else None
+            except MultiValueDictKeyError as e: print('start_at is undefined')
+
+            try: end_at =  request.GET['end_at'] if request.GET['end_at'] else None
+            except MultiValueDictKeyError as e: print('end_at is undefined')
+
             print_help(request.user.is_staff, 'REQUEST USER IS STAFF')
 
-            logs = Log.objects.filter(user_id = request.user.id, event_type='CLICK')
-            # Get ids, event_types, timestamp_deltas
-            user_ids, product_ids, event_types, timestamp_deltas, ranks  = [], [], [], [], []
-            for record in logs:
-                user_ids.append(record.user_id)
-                product_ids.append(record.product_id)
-                event_types.append(record.event_type)
-                timestamp_deltas.append(record.timestamp_delta)
-                ranks.append(record.rank)
-
-            data = {'user_id':user_ids,
-                    'product_id': product_ids,
-                    'event_type': event_types,
-                    'timestamp_delta': timestamp_deltas,
-                    'rank':ranks }
-
-            ranking_df = pd.DataFrame(data=data)
-
-            print('LOG RANKING')
-            print(ranking_df)
-
-            print_help(ranks, 'RANKS CHOOSEN')
-
-            mrr_score = mrr_at_k(ranks)
-            print_help(mrr_score, 'MRR @ K')
-
-            distinct_rank = list(dict.fromkeys([ rank for rank in ranks ]))
-            print_help(distinct_rank, 'DISTINCT RANK')
-
-            max_rank = max(distinct_rank)
-
-            # binary_ndcg = [0] * TOTAL_WINDOW
-            binary_ndcg = [0] * (max_rank + 1)
-
-            for rank in distinct_rank:
-                binary_ndcg[rank] = 1
-
-            print_help(binary_ndcg, 'BINARY NDCG')
+            users_object = User.objects.all()
+            unique_user = list(dict.fromkeys([ record.id for record in users_object ]))
             
-            ndcg_score = ndcg_at_k(binary_ndcg, TOTAL_WINDOW, method = 1)
-            print_help(ndcg_score, 'NDCG @ K')
+            print_help(unique_user,'UNIQUE USER')
+            user_array = []
+            for _id in unique_user:
+                print_help(start_at, 'START AT')
+                print_help(end_at, 'END AT')
+                logs = Log.objects.filter(user_id = _id, event_type='CLICK', timestamp_in__range=[start_at, end_at])
+                # Get ids, event_types, timestamp_deltas
+                user_ids, product_ids, event_types, timestamp_deltas, ranks  = [], [], [], [], []
+                for record in logs:
+                    user_ids.append(record.user_id)
+                    product_ids.append(record.product_id)
+                    event_types.append(record.event_type)
+                    timestamp_deltas.append(record.timestamp_delta)
+                    ranks.append(record.rank)
+
+                data = {'user_id':user_ids,
+                        'product_id': product_ids,
+                        'event_type': event_types,
+                        'timestamp_delta': timestamp_deltas,
+                        'rank':ranks }
+
+                ranking_df = pd.DataFrame(data=data)
+
+                print('LOG RANKING')
+                print(ranking_df)
+
+                print_help(ranks, 'RANKS CHOOSEN')
+
+                mrr_score = mrr_at_k(ranks)
+                print_help(mrr_score, 'MRR @ K')
+
+                distinct_rank = list(dict.fromkeys([ rank for rank in ranks ]))
+                print_help(distinct_rank, 'DISTINCT RANK')
+
+                max_rank = max(distinct_rank)
+
+                # binary_ndcg = [0] * TOTAL_WINDOW
+                binary_ndcg = [0] * (max_rank + 1)
+
+                for rank in distinct_rank:
+                    binary_ndcg[rank] = 1
+
+                print_help(binary_ndcg, 'BINARY NDCG')
+                
+                ndcg_score = ndcg_at_k(binary_ndcg, TOTAL_WINDOW, method = 1)
+                print_help(ndcg_score, 'NDCG @ K')
+
+                user_array.append([_id, mrr_score, ndcg_score])
 
         except ZeroDivisionError as zde:
             print(zde)
 
-        context = {'mrr':mrr_score, 
-                    'ndcg':ndcg_score}
+        for co, user_id in enumerate(user_array):
+            u = users_object.filter(id=user_id[0])
+            user_array[co].append(u[0].username)
+
+        print(user_array)
+        context = {'user_data':user_array}
         return render(request, 'main_app/ranking.html', context)
     else:
         return redirect('main_app:home')

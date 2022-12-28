@@ -10,10 +10,10 @@
   <a href="{% url 'main_app:item-detail-page' item.slug 20|multiply:1|add_current_rank:forloop.counter0|encrypt_id %}"
     class="text-decoration-none text-dark">
   {% endif %}
-    <img src="{{ item.pic }}" class="item-image p-4 thumbnail" alt="{{ item.name }}"/>
-    <div class="card-body">
-      <h6 class="card-title">{{ item.name }}</h6>
-      <p class="text-secondary m-0">{{ item.furniture_location|title }}</p>
+    <img src="{{ item.pic }}" class="item-image p-4 mb-0 thumbnail" alt="{{ item.name }}" />
+    <div class="card-body pt-0">
+      <h6 class="card-title">{{ item.name|title }}</h6>
+      <p class="text-secondary m-0" style="font-size: small;">{{ item.furniture_location|title }}</p>
       {% if item.isProduct %}
         <span class="badge" style="font-size: 10px; background-color: #0F4C75;">Product</span>
       {% else %}

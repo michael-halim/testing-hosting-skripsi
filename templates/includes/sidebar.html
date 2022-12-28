@@ -120,7 +120,7 @@
         <hr class="hr-sidebar">
         <a class="dropdown-item {% if request.path == '/' %} selected {% endif %}" href="{% url 'main_app:home' %}">
             <div class="row menu">
-                <div class="col-2">
+                <div class="col-2" style="padding-left: 9px;">
                     <i class="fa-solid fa-house"></i>
                 </div>
                 <div class="col-10">
@@ -202,6 +202,29 @@
                 </div>
             </a>
         </div>
+        <a class="dropdown-item {% if request.path == '/favorite/' %} selected {% endif %}"
+            href="{% url 'main_app:favorite-item' %}">
+            <div class="row menu">
+                <div class="col-2">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div class="col-10">
+                    Favorite
+                </div>
+            </div>
+        </a>
+        {% if user.is_superuser %}
+        <a class="dropdown-item {% if request.path == '/favorite/' %} selected {% endif %}" href="{% url 'main_app:ranking' %}">
+            <div class="row menu">
+                <div class="col-2">
+                    <i class="fa-solid fa-ranking-star"></i>
+                </div>
+                <div class="col-10">
+                    Ranking
+                </div>
+            </div>
+        </a>
+        {% endif %}
         <hr class="hr-sidebar">
         <a class="dropdown-item" id="logout">
             <div class="row logout-menu">

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-{% if request.GET.q %}{{request.GET.q}}{% else %}Search{% endif %}
+Favorite
 {% endblock title %}
 
 {% block script_css %}
@@ -12,15 +12,19 @@
     });
 </script>
 <style>
-    body{
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+    body {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
         background-color: #B9D7EA;
 
     }
+
     ::-webkit-scrollbar {
         display: none;
     }
+
     .item-card {
         transition: 0.35s ease-in-out;
     }
@@ -36,32 +40,36 @@
         width: 250px;
         height: 250px;
     }
-    .card-item{
+
+    .card-item {
         width: 250px;
         border-radius: 22px;
     }
-    .thumbnail{
-        border-radius: 32px;  
+
+    .thumbnail {
+        border-radius: 32px;
     }
+
     @media only screen and (max-width: 768px) {
         .card-item {
             width: 175px;
         }
 
-        .thumbnail{
-            object-fit: cover; 
-            width: 100%; 
+        .thumbnail {
+            object-fit: cover;
+            width: 100%;
             height: 180px;
         }
     }
+
     @media only screen and (max-width: 380px) {
         .card-item {
             width: 150px;
         }
 
-        .thumbnail{
-            object-fit: cover; 
-            width: 100%; 
+        .thumbnail {
+            object-fit: cover;
+            width: 100%;
             height: 150px;
         }
     }
@@ -71,12 +79,11 @@
 {% block content %}
 {% include 'includes/navbar.html' %}
 {% include 'includes/sidebar.html' %}
-{% include 'includes/advanced_filter.html' %}
 
 <div class="container">
     <div class="row d-flex justify-content-center my-5">
-        {% for item in all_items %}
-            {% include 'main_app/includes/item.html' %}
+        {% for item in page_obj.object_list %}
+        {% include 'main_app/includes/item.html' %}
         {% endfor %}
     </div>
 
@@ -86,4 +93,4 @@
         </div>
     </div>
 </div>
-    {% endblock content %}
+{% endblock content %}
