@@ -57,10 +57,10 @@ TOTAL_LOWEST_ALS_ONLY = int(TOTAL_WINDOW * PCT_LOWEST_UCF * 2) # 50 * 0.1 * 2 = 
 BUFFER_LENGTH = 10
 
 # Requirement for changing recommendation from CBF Only to Hybrid
-MINIMUM_EACH_USER_EVENT_REQUIREMENT = 5
-MINIMUM_USER_REQUIREMENT = 5
+MINIMUM_EACH_USER_EVENT_REQUIREMENT = 15
+MINIMUM_USER_REQUIREMENT = 20
 
-REFRESH_RECSYS_MINUTE = 100
+REFRESH_RECSYS_MINUTE = 60
 REFRESH_RECSYS_DAYS = 0
 
 def error_404_view(request, exception):
@@ -106,7 +106,7 @@ class HomeView(LoginRequiredMixin, ListView):
 
         # If it's still 1 minutes since creating an account, show modal
         is_show_modal = False        
-        if diff.days <= 0 and (diff.seconds // 60) <= 1:
+        if diff.days <= 0 and (diff.seconds <= 10):
             is_show_modal = True
 
         print_help(True, 'IS SHOW MODAL INDEX')
