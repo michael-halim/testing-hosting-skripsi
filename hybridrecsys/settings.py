@@ -108,11 +108,21 @@ if DEVELOPMENT_MODE is True:
         }
     }
 elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
-    if os.getenv("DATABASE_URL", None) is None:
-        raise Exception("DATABASE_URL environment variable not defined")
     DATABASES = {
-        "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'skripsi',
+            'USER': 'postgres',
+            'PASSWORD': 'postgrework',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }
+    # if os.getenv("DATABASE_URL", None) is None:
+    #     raise Exception("DATABASE_URL environment variable not defined")
+    # DATABASES = {
+    #     "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
+    # }
 
 
 # Development Database
