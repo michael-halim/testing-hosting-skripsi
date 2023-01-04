@@ -14,7 +14,10 @@ from pathlib import Path
 import os
 import sys
 import dj_database_url
+import mimetypes
 
+mimetypes.add_type("text/css", ".css", True)
+mimetypes.add_type("application/javascript", ".js", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,12 +27,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+# SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = '$%%^*&^^&*(%kjashdlkasgdljkasdS&^%%^&%^&*(fcr)p33ypsh+#4d!jmf3fikaewh^&hkb++&vy-(*%dwe^8f3!sjkadfsjkhsdfjkhlsdfjkh'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = ['*']
 
 
 # DEBUG = False
@@ -88,7 +95,10 @@ WSGI_APPLICATION = 'hybridrecsys.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 # Production Database
-DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
+# DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
+# DEVELOPMENT_MODE = True
+
+DEVELOPMENT_MODE = False
 
 if DEVELOPMENT_MODE is True:
     # DATABASES = {
@@ -182,7 +192,10 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATIC_URL = '/static/'
+if DEVELOPMENT_MODE:
+    STATIC_URL = '/static/'
+else:
+    STATIC_URL = '/staticfiles/'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
 # Default primary key field type
