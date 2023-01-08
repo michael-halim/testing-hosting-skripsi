@@ -1,11 +1,11 @@
-apyori==1.1.2
 asgiref==3.5.2
 cffi==1.15.1
 colorama==0.4.6
-cryptography==38.0.1
+cryptography==39.0.0
 dj-database-url==1.2.0
 Django==4.1.2
 django-hashids==0.6.5
+efficient-apriori==2.0.1
 gunicorn==20.1.0
 hashids==1.3.1
 implicit==0.6.1

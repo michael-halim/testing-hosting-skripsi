@@ -11,8 +11,6 @@ def encrypt_id(value):
     return fernet.encrypt(value.encode('utf-8')).decode('utf-8')
     
 def multiply(value, arg):
-    print("ARGG")
-    print(arg)
     return int(value) * (int(arg) - 1)
 
 def add_current_rank(value, arg):

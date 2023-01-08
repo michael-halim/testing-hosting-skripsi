@@ -10,14 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+# SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = False
+DEBUG = True
+
+# DEVELOPMENT_MODE = False
+DEVELOPMENT_MODE = True
+
 from pathlib import Path
 import os
-import sys
-import dj_database_url
-import mimetypes
 
-mimetypes.add_type("text/css", ".css", True)
-mimetypes.add_type("application/javascript", ".js", True)
+if not DEVELOPMENT_MODE:
+    import mimetypes
+
+    mimetypes.add_type("text/css", ".css", True)
+    mimetypes.add_type("application/javascript", ".js", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,25 +34,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 SECRET_KEY = '$%%^*&^^&*(%kjashdlkasgdljkasdS&^%%^&%^&*(fcr)p33ypsh+#4d!jmf3fikaewh^&hkb++&vy-(*%dwe^8f3!sjkadfsjkhsdfjkhlsdfjkh'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False") == "True"
-# DEBUG = True
-DEBUG = False
 
 # ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 ALLOWED_HOSTS = ['*']
 
-
-# DEBUG = False
-
-# ALLOWED_HOSTS = ['*']
-
-
 # Application definition
-
 INSTALLED_APPS = [
     'main_app',
     'main_app.templatetags',
@@ -94,19 +88,8 @@ WSGI_APPLICATION = 'hybridrecsys.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# Production Database
-# DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
-# DEVELOPMENT_MODE = True
-
-DEVELOPMENT_MODE = False
-
 if DEVELOPMENT_MODE is True:
-    # DATABASES = {
-    #     "default": {
-    #         "ENGINE": "django.db.backends.sqlite3",
-    #         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    #     }
-    # }
+    # LOCALHOST DATABASE
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -117,7 +100,8 @@ if DEVELOPMENT_MODE is True:
             'PORT': '5432',
         }
     }
-elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+else:
+    # PRODUCTION DATABASE
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -128,33 +112,6 @@ elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
             'PORT': '5432',
         }
     }
-    # if os.getenv("DATABASE_URL", None) is None:
-    #     raise Exception("DATABASE_URL environment variable not defined")
-    # DATABASES = {
-    #     "default": dj_database_url.parse(os.environ.get("DATABASE_URL")),
-    # }
-
-
-# Development Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'skripsi',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgrework',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
-# Default Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

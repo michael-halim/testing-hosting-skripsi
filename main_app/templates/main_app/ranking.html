@@ -67,14 +67,21 @@ Ranking
                 <th scope="col">MRR@K</th>
                 <th scope="col">NDCG@K</th>
                 <th scope="col">Username</th>
+                <th scope="col">Loved Items (ID)</th>
+                <th scope="col">Loved Items Rank</th>
+                <th scope="col">Average Loved Items Rank</th>
             </tr>
         </thead>
         <tbody>
             {% for user in user_data %}
             <tr>
-                {% for u in user %}
-                <td scope="row">{{u}}</td>
-                {% endfor %}
+                <td scope="row">{{user.0}}</td>
+                <td scope="row">{{user.1|floatformat:4}}</td>
+                <td scope="row">{{user.2|floatformat:4}}</td>
+                <td scope="row">{{user.6}}</td>
+                <td scope="row">{{user.3}}</td>
+                <td scope="row">{{user.4}}</td>
+                <td scope="row">{{user.5|floatformat:4}}</td>
             </tr>
             {% endfor %}
         </tbody>

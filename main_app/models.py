@@ -46,7 +46,7 @@ class Item(models.Model):
     vect_name = models.TextField(max_length=4000, null=True)
     vect_color = models.TextField(max_length=500, null=True)
     vect_material = models.TextField(max_length=4000, null=True)
-    vect_description = models.TextField(max_length=10000, null=True)
+    vect_description = models.TextField(max_length=12000, null=True)
     vect_furniture_location = models.TextField(max_length=100, null=True)
     
     normalized_price = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
@@ -83,7 +83,8 @@ class Distance(models.Model):
     furniture_location_distance = models.DecimalField(max_digits = 4, decimal_places = 2, default=0)
     total_distance = models.DecimalField(max_digits = 4, decimal_places = 2, default=0)
     temp_distance = models.DecimalField(max_digits = 4, decimal_places = 2, default=0)
-    
+    feature_added = models.TextField(max_length=300, default='')
+
     def __str__(self):
         item = Item.objects.get(id = self.product_id)
         other_item = Item.objects.get(id = self.other_product_id)
