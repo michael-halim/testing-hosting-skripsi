@@ -1,4 +1,101 @@
 import numpy as np
+import os
+from datetime import datetime
+from django.conf import settings
+
+TOTAL_WINDOW = 50
+
+PCT_HIGHEST_CBF = 0.4
+PCT_LOWEST_CBF = 0.1
+
+TOTAL_HIGHEST_CBF_ONLY = int(TOTAL_WINDOW * PCT_HIGHEST_CBF * 2) # 50 * 0.4 * 2 = 40
+TOTAL_LOWEST_CBF_ONLY = int(TOTAL_WINDOW * PCT_LOWEST_CBF * 2) # 50 * 0.1 * 2 = 10
+
+TOTAL_HIGHEST_CBF = int(TOTAL_WINDOW * PCT_HIGHEST_CBF) # 50 * 0.4 = 20
+TOTAL_LOWEST_CBF = int(TOTAL_WINDOW * PCT_LOWEST_CBF) # 50 * 0.1 = 5
+
+PCT_HIGHEST_UCF = 0.4
+PCT_LOWEST_UCF = 0.1
+
+TOTAL_HIGHEST_UCF = int(TOTAL_WINDOW * PCT_HIGHEST_UCF) # 50 * 0.4 = 20
+TOTAL_LOWEST_UCF = int(TOTAL_WINDOW * PCT_LOWEST_UCF) # 50 * 0.1 = 5
+
+TOTAL_HIGHEST_ALS_ONLY = int(TOTAL_WINDOW * PCT_HIGHEST_UCF * 2) # 50 * 0.4 * 2 = 40
+TOTAL_LOWEST_ALS_ONLY = int(TOTAL_WINDOW * PCT_LOWEST_UCF * 2) # 50 * 0.1 * 2 = 10
+
+BUFFER_LENGTH = 10
+
+# Requirement for changing recommendation from CBF Only to Hybrid
+MINIMUM_EACH_USER_EVENT_REQUIREMENT = 5 if settings.DEVELOPMENT_MODE else 15
+MINIMUM_USER_REQUIREMENT = 5 if settings.DEVELOPMENT_MODE else 20
+
+REFRESH_RECSYS_MINUTE = 10 if settings.DEVELOPMENT_MODE else 100
+REFRESH_RECSYS_DAYS = 0
+
+EVENT_TYPE_STRENGTH = {
+    'CLICK': 1.0,
+    'LIKE': 2.0, 
+    'VIEW': 3.0,
+}
+
+def print_help(var, title='', username=''):
+    """
+    Log Preview If Variable is String
+    ============================================
+    ============================================ \n
+    2023-01-06 14:15:01.963270 \n
+    USERNAME:  TRAIN APRIORI MODEL \n
+    APRIORI MODEL\n
+    ============================================
+
+    Log Preview If Variable Is An Array
+    ============================================
+    ============================================\n
+    2023-01-06 14:15:01.923290\n
+    USERNAME:  TRAIN WEIGHTED MATRIX\n
+    CBF LOWEST ITEM LIST\n
+    [ [841, 2.82], [840, 2.95], [2237, 3.03], [834, 3.2], [224, 3.23] ]\n
+    LENGTH : 5\n
+    ============================================
+    """
+    logs = []
+    bracket = '============================================'
+    print(bracket)
+    print(datetime.now())
+    print('USERNAME: ', username)
+
+    logs += [bracket, str(datetime.now()), f'USERNAME: {str(username)}']
+    
+    if isinstance(var, str) and title == '':
+        print(var)
+        print(bracket)
+        logs += [str(var), bracket]
+    else:
+        print(title)
+        print(var)
+        logs += [str(title), str(var)]
+
+        try:
+            print(f'LENGTH : {len(var)}')
+            print(bracket)
+            logs += [f'LENGTH : {str(len(var))}', bracket]
+        except TypeError as e:
+            print(bracket)
+            logs += [bracket]
+
+    logs = '\n'.join(logs)
+
+    if settings.DEVELOPMENT_MODE:
+        save_log(logs, filename='logs.txt')
+
+def save_log(logs, filename='logs.txt'):
+    dirname = os.path.dirname(__file__)
+    up_two_levels = os.pardir + os.sep + os.pardir
+    dest_path = os.path.join(dirname, up_two_levels, filename)
+    with open(dest_path, 'a') as file:
+        file.write(logs)
+
+    file.close()
 
 def mean_reciprocal_rank(rs):
     """Score is reciprocal of the rank of the first relevant item
