@@ -11,11 +11,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-DEBUG = True
+DEBUG = False
+# DEBUG = True
 
-# DEVELOPMENT_MODE = False
-DEVELOPMENT_MODE = True
+DEVELOPMENT_MODE = False
+# DEVELOPMENT_MODE = True
 
 from pathlib import Path
 import os
