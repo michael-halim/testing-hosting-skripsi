@@ -85,13 +85,14 @@ def print_help(var, title='', username=''):
 
     logs = '\n'.join(logs)
 
-    if settings.DEVELOPMENT_MODE:
+    if not settings.DEVELOPMENT_MODE:
         save_log(logs, filename='logs.txt')
 
 def save_log(logs, filename='logs.txt'):
     dirname = os.path.dirname(__file__)
     up_two_levels = os.pardir + os.sep + os.pardir
     dest_path = os.path.join(dirname, up_two_levels, filename)
+
     with open(dest_path, 'a') as file:
         file.write(logs)
 

@@ -298,7 +298,7 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     return cbf_highest_item_list, cbf_lowest_item_list
 
 
-def train_model(request):
+def train_model():
     is_show_score = True
     all_hybrid_recommendation = []
     
@@ -394,7 +394,7 @@ def train_model(request):
                     # USER BASED COLLABORATIVE FILTERING RECOMMENDATION
                     if len(filter_view_log) > 2 and len(apriori_unique_user_ids) > 1:
 
-                        print_help(var='ALS AND APRIORI', username=request.user.username)
+                        print_help(var='ALS AND APRIORI', username='SERVER TRAINING')
                         
                         # ALS METHOD
                         ALS_result = train_als_model(unique_user_obj.id)

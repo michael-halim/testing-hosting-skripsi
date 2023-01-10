@@ -164,5 +164,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 HASHID_FIELD_SALT = "a long and secure salt value that is not the same as settings.SECRET_KEY"
 
 CRONJOBS = [
-    ('*/1 * * * *','main_app.cron.train_model')
+    ('0 */2 * * *','main_app.cron.train_model')
 ]
