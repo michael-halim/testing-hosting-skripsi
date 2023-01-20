@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from datetime import datetime
+from datetime import date, datetime
 from django.conf import settings
 
 TOTAL_WINDOW = 50
@@ -86,11 +86,12 @@ def print_help(var, title='', username=''):
     logs = '\n'.join(logs)
 
     if not settings.DEVELOPMENT_MODE:
-        save_log(logs, filename='logs.txt')
+        save_log(logs)
 
-def save_log(logs, filename='logs.txt'):
+def save_log(logs):
     dirname = os.path.dirname(__file__)
-    up_two_levels = os.pardir + os.sep + os.pardir
+    up_two_levels = os.pardir + os.sep + os.pardir + '/logs/'
+    filename = str(date.today()) + '.txt'
     dest_path = os.path.join(dirname, up_two_levels, filename)
 
     with open(dest_path, 'a') as file:
