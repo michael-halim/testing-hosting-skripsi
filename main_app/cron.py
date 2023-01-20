@@ -38,7 +38,7 @@ def combine_ucf_recommendation(recsys_1, recsys_2, limit = 100):
 
     return combined_recommendation
 
-def train_als_model(user_id):
+def train_als_model(user_id, is_refresh_time_based):
     print_help(var='ALS MODEL', username='TRAIN ALS MODEL')
 
     ucf_logs = Log.objects.all()
@@ -87,7 +87,7 @@ def train_als_model(user_id):
     
     ucf_model = None
 
-    if os.path.exists(dest_path):
+    if os.path.exists(dest_path) and not is_refresh_time_based:
         print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
 
         ucf_model = load_model(dest_path)
@@ -397,7 +397,7 @@ def train_model():
                         print_help(var='ALS AND APRIORI', username='SERVER TRAINING')
                         
                         # ALS METHOD
-                        ALS_result = train_als_model(unique_user_obj.id)
+                        ALS_result = train_als_model(unique_user_obj.id, is_refresh_time_based)
                         
                         # APRIORI METHOD
                         APRIORI_result = train_apriori_model(apriori_unique_user_ids)
@@ -463,7 +463,7 @@ def train_model():
                         print_help(var='ALS ONLY RECOMMENDATION', username='SERVER TRAINING')
 
                         # ALS METHOD
-                        ALS_result = train_als_model(unique_user_obj.id)
+                        ALS_result = train_als_model(unique_user_obj.id, is_refresh_time_based)
 
                         # Slice ALS Recommendation to Appropriate Size
                         ucf_highest_item_list = ALS_result[:int(TOTAL_HIGHEST_ALS_ONLY) + BUFFER_LENGTH]
