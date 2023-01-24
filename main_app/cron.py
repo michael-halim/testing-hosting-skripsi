@@ -220,6 +220,10 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     
     for _id in cbf_product_ids:
         # print('PRODUCT ID ', _id)
+        print('MAX ID ', max_id)
+        print('TYPE MAX ID ', type(max_id))
+        print('ID ', _id)
+        print('TYPE ID ', type(_id))
         if max_id == _id:
             print('MAX ID CONTINUE')
             continue
