@@ -104,8 +104,7 @@ def train_als_model(user_id, is_refresh_time_based):
     ucf_model = None
     
     if os.path.exists(dest_path) and not is_refresh_time_based:
-        print('CREATION OR MODIFIED DATE FILE')
-        print(creation_date(dest_path))
+        
         print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
 
         ucf_model = load_model(dest_path)
@@ -119,6 +118,8 @@ def train_als_model(user_id, is_refresh_time_based):
 
         dump_model(ucf_model, dest_path)
 
+    print_help(var=creation_date(dest_path), title='CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+    
     ids, scores = ucf_model.recommend(user_id, user_product_matrix[user_id], N=50, filter_already_liked_items=False)
 
     # Save ids and score from recommendation in the form of tuple (id, score)
@@ -210,34 +211,39 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     for _id in cbf_product_ids:
         distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[:1]
         
-        if distance_object[0].feature_added == FEATURES and distance_object[0].temp_distance != 99.0:
-            print('CONTINUE')
-            continue
-        
-        else:
-            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))
+        try:
+            if distance_object[0].feature_added == FEATURES and distance_object[0].temp_distance != 99.0:
+                print('CONTINUE')
+                continue
+            
+            else:
+                distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))
 
-            for obj in distance_object:
-                minus = 0
+                for obj in distance_object:
+                    minus = 0
 
-                if not NAME_FEATURE:
-                    minus += obj.name_distance
-                if not PRICE_FEATURE:
-                    minus += obj.price_distance
-                if not DESCRIPTION_FEATURE:
-                    minus += obj.description_distance
-                if not MATERIAL_FEATURE:
-                    minus += obj.material_distance
-                if not WEIGHT_FEATURE:
-                    minus += obj.weight_distance
-                if not DIMENSION_FEATURE:
-                    minus += obj.dimension_distance
-                if not FURNITURE_LOCATION_FEATURE:
-                    minus += obj.furniture_location_distance
+                    if not NAME_FEATURE:
+                        minus += obj.name_distance
+                    if not PRICE_FEATURE:
+                        minus += obj.price_distance
+                    if not DESCRIPTION_FEATURE:
+                        minus += obj.description_distance
+                    if not MATERIAL_FEATURE:
+                        minus += obj.material_distance
+                    if not WEIGHT_FEATURE:
+                        minus += obj.weight_distance
+                    if not DIMENSION_FEATURE:
+                        minus += obj.dimension_distance
+                    if not FURNITURE_LOCATION_FEATURE:
+                        minus += obj.furniture_location_distance
 
-                obj.temp_distance = obj.total_distance - minus
-                obj.feature_added = FEATURES
-                obj.save()
+                    obj.temp_distance = obj.total_distance - minus
+                    obj.feature_added = FEATURES
+                    obj.save()
+
+        except IndexError as e:
+            print(e)
+            print_help(var=distance_object, title='CHECK ERROR', username='SERVER TRAINING')
 
     cbf_highest_item_list = []
     cbf_lowest_item_list = []
