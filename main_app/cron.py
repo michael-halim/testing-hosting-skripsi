@@ -1,9 +1,9 @@
 # Import Function from .views
 from .views import print_help, create_random_recommendation
 from .helper import *
-from .models import Log, Distance, Recommendation, User
+from .models import Log, Distance, Recommendation, User, Item
 
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.http import JsonResponse
 
 from joblib import dump as dump_model, load as load_model
@@ -216,14 +216,15 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     FEATURES = [ f for f in FEATURES if f != '' ]
     FEATURES = '=='.join(FEATURES)
 
+    max_id = Item.objects.aggregate(Max['id'])
+    
     for _id in cbf_product_ids:
         # print('PRODUCT ID ', _id)
-
-        try:
-            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[0]
-        except IndexError as e:
-            print('CONTINUE')
+        if max_id == _id:
+            print('MAX ID CONTINUE')
             continue
+        else:
+            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[0]
 
         # print_help(var=distance_object,title='DISTANCE OBJECT CHECK', username='SERVER TRAINING')
         if distance_object.feature_added == FEATURES and distance_object.temp_distance != 99.0:
