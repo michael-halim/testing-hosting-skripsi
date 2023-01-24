@@ -13,11 +13,27 @@ from implicit.nearest_neighbours import bm25_weight
 from efficient_apriori import apriori
 from sklearn.preprocessing import MinMaxScaler
 
-import os
+import os, platform
 import pandas as pd
 import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+def creation_date(path_to_file):
+    """
+    Try to get the date that a file was created, falling back to when it was
+    last modified if that isn't possible.
+    """
+    if platform.system() == 'Windows':
+        return os.path.getctime(path_to_file)
+    else:
+        stat = os.stat(path_to_file)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
 
 def combine_ucf_recommendation(recsys_1, recsys_2, limit = 100):
     combined_recommendation = []
@@ -86,13 +102,16 @@ def train_als_model(user_id, is_refresh_time_based):
     dest_path = os.path.join(dirname, up_two_levels, filename)
     
     ucf_model = None
-
+    
     if os.path.exists(dest_path) and not is_refresh_time_based:
+        print('CREATION OR MODIFIED DATE FILE')
+        print(creation_date(dest_path))
         print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
 
         ucf_model = load_model(dest_path)
 
     else:
+        
         print_help(var='TRAINING UCF MODEL', username='TRAIN ALS MODEL')
         # Train UCF Model
         ucf_model = AlternatingLeastSquares(factors=64, regularization=0.05)
