@@ -216,7 +216,7 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     FEATURES = [ f for f in FEATURES if f != '' ]
     FEATURES = '=='.join(FEATURES)
 
-    max_id = Item.objects.aggregate(Max['id'])
+    max_id = Item.objects.aggregate(Max('id'))
     
     for _id in cbf_product_ids:
         # print('PRODUCT ID ', _id)
