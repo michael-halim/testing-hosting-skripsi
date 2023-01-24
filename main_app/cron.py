@@ -101,9 +101,19 @@ def train_als_model(user_id, is_refresh_time_based):
     filename = 'als_model.sav'
     dest_path = os.path.join(dirname, up_two_levels, filename)
     
+    epoch_time = creation_date(dest_path)
+    current_time = datetime.fromtimestamp(epoch_time)
+    zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
+
+    time_diff = datetime.now(ZoneInfo('Asia/Bangkok')) - zone_time
+    print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+    print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+    print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+    print('TIME DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(time_diff.days, time_diff.seconds // 60))
+
     ucf_model = None
     
-    if os.path.exists(dest_path) and not is_refresh_time_based:
+    if os.path.exists(dest_path) and (time_diff.days <= REFRESH_RECSYS_DAYS and (time_diff.seconds // 60) < REFRESH_RECSYS_MINUTE):
         
         print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
 
@@ -118,15 +128,6 @@ def train_als_model(user_id, is_refresh_time_based):
 
         dump_model(ucf_model, dest_path)
 
-    epoch_time = creation_date(dest_path)
-    current_time = datetime.fromtimestamp(epoch_time)
-    zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
-    
-    print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    
-    
     ids, scores = ucf_model.recommend(user_id, user_product_matrix[user_id], N=50, filter_already_liked_items=False)
 
     # Save ids and score from recommendation in the form of tuple (id, score)
