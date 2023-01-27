@@ -138,7 +138,7 @@ def train_als_model(user_id, is_refresh_time_based):
     return ALS_result
 
 def train_apriori_model(apriori_unique_user_ids):
-    print_help(var='APRIORI MODEL', username='TRAIN APRIORI MODEL')
+    print_help(var='APRIORI MODEL', username='ENTER APRIORI MODEL')
     
     # Separate ids by user_id 
     # apriori_product_ids = [ [1,2], [3,4,5], [7,8] ]
@@ -151,9 +151,10 @@ def train_apriori_model(apriori_unique_user_ids):
         apriori_product_ids.append(tmp_product)
 
     # Train Apriori
+    print_help(var='APRIORI MODEL', username='TRAIN APRIORI MODEL')
     _, rules = apriori(transactions=apriori_product_ids, 
-                    min_support=0.03, 
-                    min_confidence=0.2)
+                    min_support=0.45, 
+                    min_confidence=0.55)
 
     # Convert to pandas.DataFrame
     df = pd.DataFrame(rules)
@@ -217,14 +218,10 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     FEATURES = '=='.join(FEATURES)
 
     max_id = Item.objects.aggregate(Max('id'))
+    max_id = max_id['id__max']
     
     for _id in cbf_product_ids:
-        # print('PRODUCT ID ', _id)
-        # print('MAX ID ', max_id)
-        # print('TYPE MAX ID ', type(max_id))
-        # print('ID ', _id)
-        # print('TYPE ID ', type(_id))
-        if max_id['id__max'] == _id:
+        if max_id == _id:
             print('MAX ID CONTINUE')
             continue
         else:
@@ -591,6 +588,7 @@ def train_model():
                 # Bulk Update Recommendation
                 Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
 
+        print_help(var='TRAINING DONE', username='SERVER TRAINING')
         return JsonResponse({
             'message':'Done'
         })
