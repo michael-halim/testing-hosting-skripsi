@@ -101,15 +101,16 @@ def train_als_model(user_id, is_refresh_time_based):
     filename = 'als_model.sav'
     dest_path = os.path.join(dirname, up_two_levels, filename)
     
-    epoch_time = creation_date(dest_path)
-    current_time = datetime.fromtimestamp(epoch_time)
-    zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
-
-    time_diff = datetime.now(ZoneInfo('Asia/Bangkok')) - zone_time
-    print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
-    print('TIME DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(time_diff.days, time_diff.seconds // 60))
+    if os.path.exists(dest_path):
+      epoch_time = creation_date(dest_path)
+      current_time = datetime.fromtimestamp(epoch_time)
+      zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
+  
+      time_diff = datetime.now(ZoneInfo('Asia/Bangkok')) - zone_time
+      print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print('TIME DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(time_diff.days, time_diff.seconds // 60))
 
     ucf_model = None
     
