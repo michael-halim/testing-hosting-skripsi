@@ -53,8 +53,48 @@ class Item(models.Model):
     normalized_weight = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
     normalized_dimension = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
     
+    created_at = models.DateTimeField(null=True)
+    modified_at = models.DateTimeField(null=True)
+    status = models.SmallIntegerField(default=1)
+
     def __str__(self):
         return self.name
+
+class TempItem(models.Model):
+    name = models.CharField(max_length = 150)
+    slug = models.SlugField(max_length=420,db_index=True)
+    pic = models.URLField(max_length = 430)
+    address = models.CharField(max_length = 150)
+    phone = models.CharField(max_length = 15)
+    price = models.IntegerField()
+    original_link = models.URLField(max_length = 460)
+    description = models.TextField(max_length = 1500)
+    additional_desc = models.TextField(max_length = 1500,default='')
+    material = models.TextField(max_length = 440, default = '')
+    weight = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0)
+    weight_unit = models.CharField(max_length = 4, default = '')
+    color = models.CharField(max_length = 450, default = '')
+    dimension_length = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0)
+    dimension_width = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0)
+    dimension_height = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0)
+    dimension_unit = models.CharField(max_length = 4, default='')
+    isProduct = models.BooleanField(default = True)
+    furniture_location = models.CharField(max_length = 100, default='')
+
+    vect_name = models.TextField(max_length=4000, null=True)
+    vect_color = models.TextField(max_length=500, null=True)
+    vect_material = models.TextField(max_length=4000, null=True)
+    vect_description = models.TextField(max_length=12000, null=True)
+    vect_furniture_location = models.TextField(max_length=100, null=True)
+    
+    normalized_price = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
+    normalized_weight = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
+    normalized_dimension = models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, null=True)
+    
+    created_at = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return 'Temp Item : ' + self.name
 
 
 class Feature(models.Model):

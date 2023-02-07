@@ -779,6 +779,7 @@ def ranking(request):
                 print_help(end_at, 'END AT', username=request.user.username)
                 
                 logs = Log.objects.filter(user_id = _id, event_type='CLICK', timestamp_in__range=[start_at, end_at])
+                # print(logs.query)
                 like_logs = Log.objects.filter(user_id= _id, event_type='LIKE', timestamp_in__range=[start_at, end_at])
                 like_logs = [ log.product_id for log in like_logs ]
                 like_ranks = []
@@ -790,7 +791,13 @@ def ranking(request):
                     elif len(recommended_item) == 1:
                         like_ranks.append(recommended_item[0].rank)
 
-                avg_ranks = float(sum(like_ranks)) / float(len(like_ranks))
+                # print(sum(like_ranks))
+                # print(len(like_ranks))
+                avg_ranks = 0
+                if not float(len(like_ranks)) == 0:
+                    avg_ranks = float(sum(like_ranks)) / float(len(like_ranks))
+                
+                print_help(avg_ranks, 'AVG RANKS', username=request.user.username)
 
                 # Get ids, event_types, timestamp_deltas
                 user_ids, product_ids, event_types, timestamp_deltas, ranks  = [], [], [], [], []
