@@ -1,9 +1,9 @@
 # Import Function from .views
 from .views import create_random_recommendation
 from .helper import *
-from .models import Log, Distance, Recommendation, User
+from .models import Log, Distance, Recommendation, User, Item
 
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.http import JsonResponse
 
 from joblib import dump as dump_model, load as load_model
@@ -13,11 +13,27 @@ from implicit.nearest_neighbours import bm25_weight
 from efficient_apriori import apriori
 from sklearn.preprocessing import MinMaxScaler
 
-import os
+import os, platform
 import pandas as pd
 import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+def creation_date(path_to_file):
+    """
+    Try to get the date that a file was created, falling back to when it was
+    last modified if that isn't possible.
+    """
+    if platform.system() == 'Windows':
+        return os.path.getctime(path_to_file)
+    else:
+        stat = os.stat(path_to_file)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
 
 def combine_ucf_recommendation(recsys_1, recsys_2, limit = 100):
     combined_recommendation = []
@@ -85,15 +101,28 @@ def train_als_model(user_id, is_refresh_time_based):
     filename = 'als_model.sav'
     dest_path = os.path.join(dirname, up_two_levels, filename)
     
-    ucf_model = None
+    if os.path.exists(dest_path):
+      epoch_time = creation_date(dest_path)
+      current_time = datetime.fromtimestamp(epoch_time)
+      zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
+  
+      time_diff = datetime.now(ZoneInfo('Asia/Bangkok')) - zone_time
+      print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print('TIME DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(time_diff.days, time_diff.seconds // 60))
 
-    if os.path.exists(dest_path) and not is_refresh_time_based:
+    ucf_model = None
+    
+    if os.path.exists(dest_path) and (time_diff.days <= REFRESH_RECSYS_DAYS and (time_diff.seconds // 60) < REFRESH_RECSYS_MINUTE):
+        
         print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
 
         ucf_model = load_model(dest_path)
 
     else:
         print_help(var='TRAINING UCF MODEL', username='TRAIN ALS MODEL')
+        
         # Train UCF Model
         ucf_model = AlternatingLeastSquares(factors=64, regularization=0.05)
         ucf_model.fit(2 * user_product_matrix)
@@ -110,7 +139,7 @@ def train_als_model(user_id, is_refresh_time_based):
     return ALS_result
 
 def train_apriori_model(apriori_unique_user_ids):
-    print_help(var='APRIORI MODEL', username='TRAIN APRIORI MODEL')
+    print_help(var='APRIORI MODEL', username='ENTER APRIORI MODEL')
     
     # Separate ids by user_id 
     # apriori_product_ids = [ [1,2], [3,4,5], [7,8] ]
@@ -123,9 +152,10 @@ def train_apriori_model(apriori_unique_user_ids):
         apriori_product_ids.append(tmp_product)
 
     # Train Apriori
+    print_help(var='APRIORI MODEL', username='TRAIN APRIORI MODEL')
     _, rules = apriori(transactions=apriori_product_ids, 
-                    min_support=0.03, 
-                    min_confidence=0.2)
+                    min_support=0.45, 
+                    min_confidence=0.55)
 
     # Convert to pandas.DataFrame
     df = pd.DataFrame(rules)
@@ -188,10 +218,18 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
     FEATURES = [ f for f in FEATURES if f != '' ]
     FEATURES = '=='.join(FEATURES)
 
+    max_id = Item.objects.aggregate(Max('id'))
+    max_id = max_id['id__max']
+    
     for _id in cbf_product_ids:
-        distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[:1]
-        
-        if distance_object[0].feature_added == FEATURES and distance_object[0].temp_distance != 99.0:
+        if max_id == _id:
+            print('MAX ID CONTINUE')
+            continue
+        else:
+            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[0]
+
+        # print_help(var=distance_object,title='DISTANCE OBJECT CHECK', username='SERVER TRAINING')
+        if distance_object.feature_added == FEATURES and distance_object.temp_distance != 99.0:
             print('CONTINUE')
             continue
         
@@ -219,6 +257,7 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
                 obj.temp_distance = obj.total_distance - minus
                 obj.feature_added = FEATURES
                 obj.save()
+
 
     cbf_highest_item_list = []
     cbf_lowest_item_list = []
@@ -550,6 +589,7 @@ def train_model():
                 # Bulk Update Recommendation
                 Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
 
+        print_help(var='TRAINING DONE', username='SERVER TRAINING')
         return JsonResponse({
             'message':'Done'
         })

@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from datetime import datetime
+from datetime import date, datetime
 from django.conf import settings
 from zoneinfo import ZoneInfo
 
