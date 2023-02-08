@@ -1,5 +1,5 @@
 # Import Function from .views
-from .views import print_help, create_random_recommendation
+from .views import create_random_recommendation
 from .helper import *
 from .models import Log, Distance, Recommendation, User, Item
 
