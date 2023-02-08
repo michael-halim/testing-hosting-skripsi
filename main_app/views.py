@@ -26,14 +26,19 @@ import re
 from cryptography.fernet import Fernet
 
 def error_404_view(request, exception):
+    """Handles Not Found Error"""
     # we add the path to the the 404.html file
     # here. The name of our HTML file is 404.html
     return render(request, '404.html')
 
 def error_500_view(request):
+    """Handles Server Error"""
+
     return render(request, '500.html')
     
 class HomeView(LoginRequiredMixin, ListView):
+    """Handles Home Page"""
+
     login_url = '/login/'
     redirect_field_name = '/'
 
@@ -90,9 +95,9 @@ class HomeView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         """
         Timezone is Saved UTC+0 in DB, Here's how to change it to Local Timezone \n
-        `local_tz = ZoneInfo('Asia/Bangkok')` \n
-        `db_tz = recommendations[0].created_at` \n
-        `print(db_tz.astimezone(local_tz)) # UTC+7 because Asia/Bangkok is UTC+7`
+        >>> local_tz = ZoneInfo('Asia/Bangkok')
+        >>> db_tz = recommendations[0].created_at
+        >>> print(db_tz.astimezone(local_tz)) # UTC+7 because Asia/Bangkok is UTC+7
         """
 
         print_help(var='TAKE RECOMMENDATION FROM DB', username=self.request.user.username)
@@ -129,6 +134,8 @@ class HomeView(LoginRequiredMixin, ListView):
         return items
 
 class SearchView(LoginRequiredMixin, ListView):
+    """Handle Searching"""
+
     login_url = '/login/'
     redirect_field_name = '/'
 
@@ -142,9 +149,8 @@ class SearchView(LoginRequiredMixin, ListView):
         search_furniture_location = []
         search_is_product = []
 
-        """ 'if self.request.GET['something]' is called when it's empty, it will throw an error
-            even when it's called in if statement
-        """
+        #'if self.request.GET['something]' is called when it's empty, it will throw an error 
+        # even when it's called in if statement
 
         # Get Query
         try: q = self.request.GET['q']
@@ -246,6 +252,8 @@ class SearchView(LoginRequiredMixin, ListView):
 
         return items
 class DetailPostView(LoginRequiredMixin,View):
+    """Handle Detail Pages"""
+
     login_url = '/login/'
     redirect_field_name = '/'
     
@@ -290,6 +298,8 @@ class DetailPostView(LoginRequiredMixin,View):
         }
         return render(request, 'main_app/detail.html',context)
 class AboutView(LoginRequiredMixin,View):
+    """Handle About Pages"""
+
     login_url = '/login/'
     redirect_field_name = '/'
     
@@ -298,6 +308,8 @@ class AboutView(LoginRequiredMixin,View):
         return render(request, 'main_app/about.html',context)
 
 class FavoriteView(LoginRequiredMixin, View):
+    """Handle Favorite Pages"""
+
     login_url = '/login/'
     redirect_field_name = '/'
 
@@ -332,6 +344,7 @@ class FavoriteView(LoginRequiredMixin, View):
         return render(request, 'main_app/favorite.html',context)
 
 def handle_copy(request):
+    """Handle Copy Event"""
     if request.POST:
         print_help(var='POST HANDLE COPY VIEWS', username=request.user.username)
         
@@ -366,6 +379,7 @@ def handle_copy(request):
 
 @unauthenticated_user
 def categoryPage(request,category):
+    """Handle Category Page"""
     category = category.replace('-',' ')
     
     # Get All Recommendations Based On User ID
@@ -428,6 +442,7 @@ def categoryPage(request,category):
 
 @unauthenticated_user
 def loginPage(request):
+    """Handle Login Page"""
     # margin-left: -50%; -> Signup Tab
     # margin-left: 0%; -> Login Tab
     margin_left = 0
@@ -484,6 +499,8 @@ def logoutPage(request):
 # Service to Update timestamp_out and timestamp_delta
 @unauthenticated_user
 def previousPage(request):
+    """Handle Previous Page Event"""
+
     # Get Current URL
     full_url = request.GET['current_url']
     
@@ -511,6 +528,7 @@ def previousPage(request):
     return JsonResponse(data)
 
 def view_original_link(request):
+    """Handle View Original Link Event"""
     # Get Current URL
     full_url = request.GET['current_url']
 
@@ -550,7 +568,7 @@ def view_original_link(request):
     return JsonResponse(data)
 
 def product_liked(request):
-
+    """Handles Product Liked Event"""
     if request.POST:
         # Get Current URL
         full_url = request.POST['current_url']
@@ -604,6 +622,8 @@ def product_liked(request):
 
 
 def handle_question(request):
+    """Handle Question and Set Recommendation to DB"""
+
     is_show_score = True
     all_hybrid_recommendation = []
     if request.POST:
@@ -744,6 +764,11 @@ def handle_question(request):
         Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
 
 def create_random_recommendation(limit = TOTAL_WINDOW):
+    """Return Random Recommendation
+    >>> recsys = create_random_recommendations(limit=TOTAL_WINDOW)
+    >>> print(recsys)
+    [[item.id, 0.0]]
+    """
     count = Item.objects.count()
     all_hybrid_recommendation = []
     for _ in range(limit):
@@ -755,6 +780,7 @@ def create_random_recommendation(limit = TOTAL_WINDOW):
 
 @login_required(login_url='main_app:home')
 def ranking(request):
+    """Logic to Ranking Page"""
     if request.user.is_staff:
 
         try:

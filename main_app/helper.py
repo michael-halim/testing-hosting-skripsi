@@ -2,6 +2,7 @@ import numpy as np
 import os
 from datetime import datetime
 from django.conf import settings
+from zoneinfo import ZoneInfo
 
 TOTAL_WINDOW = 50
 
@@ -38,25 +39,32 @@ EVENT_TYPE_STRENGTH = {
     'VIEW': 3.0,
 }
 
-def print_help(var, title='', username=''):
-    """
-    Log Preview If Variable is String
-    ============================================
-    ============================================ \n
-    2023-01-06 14:15:01.963270 \n
-    USERNAME:  TRAIN APRIORI MODEL \n
-    APRIORI MODEL\n
-    ============================================
+LOCAL_TZ = ZoneInfo('Asia/Bangkok')
 
-    Log Preview If Variable Is An Array
-    ============================================
-    ============================================\n
-    2023-01-06 14:15:01.923290\n
-    USERNAME:  TRAIN WEIGHTED MATRIX\n
-    CBF LOWEST ITEM LIST\n
-    [ [841, 2.82], [840, 2.95], [2237, 3.03], [834, 3.2], [224, 3.23] ]\n
-    LENGTH : 5\n
-    ============================================
+def get_today():
+    """Get Today's Date with `YYYY-MM-DD` Format"""
+    today = datetime.datetime.now(LOCAL_TZ)
+    return datetime.date(today.year, today.month, today.day)
+
+
+SAVE_LOG_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'website_logs')
+LOG_FILENAME = str(get_today()) + '.txt'
+
+def print_help(var, title='', username='', show_list_more=False, save_log_path=SAVE_LOG_PATH, log_filename = LOG_FILENAME):
+    """Log to CLI and Save to File \n
+    `============================================`\n
+    `2023-01-06 14:15:01.963270`\n
+    `USERNAME:  TRAIN APRIORI MODEL`\n
+    `APRIORI MODEL`\n
+    `============================================`
+    
+    `============================================`\n
+    `2023-01-06 14:15:01.923290`\n
+    `USERNAME:  TRAIN WEIGHTED MATRIX`\n
+    `CBF LOWEST ITEM LIST`\n
+    `[ [841, 2.82], [840, 2.95], [2237, 3.03], [834, 3.2], [224, 3.23] ]`\n
+    `ORIGINAL LENGTH : 5`\n
+    `============================================`
     """
     logs = []
     bracket = '============================================'
@@ -72,13 +80,17 @@ def print_help(var, title='', username=''):
         logs += [str(var), bracket]
     else:
         print(title)
-        print(var)
-        logs += [str(title), str(var)]
+        modified_var = var
+        if not show_list_more and isinstance(var, list):
+            modified_var = modified_var[:5] if len(modified_var) > 5 else modified_var
+        
+        print(modified_var)
+        logs += [str(title), str(modified_var)]
 
         try:
-            print(f'LENGTH : {len(var)}')
+            print(f'ORIGINAL LENGTH : {len(var)}')
             print(bracket)
-            logs += [f'LENGTH : {str(len(var))}', bracket]
+            logs += [f'ORIGINAL LENGTH : {str(len(var))}', bracket]
         except TypeError as e:
             print(bracket)
             logs += [bracket]
@@ -86,18 +98,17 @@ def print_help(var, title='', username=''):
     logs = '\n'.join(logs)
 
     if not settings.DEVELOPMENT_MODE:
-        save_log(logs, filename='logs.txt')
+        save_log(logs=logs, save_log_path=save_log_path, log_filename=log_filename)
 
-def save_log(logs, filename='logs.txt'):
-    dirname = os.path.dirname(__file__)
-    up_two_levels = os.pardir + os.sep + os.pardir
-    dest_path = os.path.join(dirname, up_two_levels, filename)
+def save_log(logs, save_log_path, log_filename):
+    """Save Log File to Path and Create Directories If Not Exists"""
+    if not os.path.exists(save_log_path):
+        os.makedirs(save_log_path)
 
-    with open(dest_path, 'a') as file:
+    with open(save_log_path + log_filename, 'a') as file:
         file.write(logs)
 
     file.close()
-
 def mean_reciprocal_rank(rs):
     """Score is reciprocal of the rank of the first relevant item
     First element is 'rank 1'.  Relevance is binary (nonzero is relevant).
