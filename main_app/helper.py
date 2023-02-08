@@ -43,11 +43,11 @@ LOCAL_TZ = ZoneInfo('Asia/Bangkok')
 
 def get_today():
     """Get Today's Date with `YYYY-MM-DD` Format"""
-    today = datetime.datetime.now(LOCAL_TZ)
-    return datetime.date(today.year, today.month, today.day)
+    today = datetime.now(LOCAL_TZ)
+    return date(today.year, today.month, today.day)
 
 
-SAVE_LOG_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'website_logs')
+SAVE_LOG_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'website_logs' + os.sep)
 LOG_FILENAME = str(get_today()) + '.txt'
 
 def print_help(var, title='', username='', show_list_more=False, save_log_path=SAVE_LOG_PATH, log_filename = LOG_FILENAME):
