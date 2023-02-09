@@ -815,14 +815,19 @@ def create_random_recommendation(limit = TOTAL_WINDOW):
     >>> print(recsys)
     [[item.id, 0.0]]
     """
-    count = Item.objects.filter(status=1).count()
-    all_hybrid_recommendation = []
-    for _ in range(limit):
-        # Fetching Random Item and Append it to Object and Give Score of 0 Because it is Random
-        item_object = Item.objects.filter(status=1)[randint(0, count - 1)]
-        all_hybrid_recommendation.append([item_object.id, 0.0])
+    # Fetching All Item That Active
+    random_recommendation = Item.objects.filter(status=1)
+    # Give Score of 0 Because it is Random
+    random_recommendation = [ [rec.id, 0.0] for rec in random_recommendation ]
 
-    return all_hybrid_recommendation
+    for i in range(len(random_recommendation)):
+        random_number = randint(0, len(random_recommendation)-1)
+        random_recommendation[i], random_recommendation[random_number] = \
+            random_recommendation[random_number], random_recommendation[i]
+    
+    random_recommendation = random_recommendation[:limit]
+
+    return random_recommendation
 
 @login_required(login_url='main_app:home')
 def ranking(request):

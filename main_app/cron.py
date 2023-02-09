@@ -614,17 +614,36 @@ def train_model():
                 
                 # Bulk Update Recommendation
                 Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
-
-                print_help(var='EXTENDED BULK UPDATE', username='SERVER TRAINING')
-
-                # Zip QuerySet Recommendation and Extended Recommendation and Then Enumerate from 1
-                for count, (rec, item) in enumerate(zip(extended_recommendation_object, extended_recommendation), 1):
-                    rec.product_id = item[0]
-                    rec.rank = count
-                    rec.created_at = now
                 
-                # Bulk Update Recommendation
-                ExtendedRecommendation.objects.bulk_update(extended_recommendation_object, fields=['product_id','rank','created_at'])
+                
+                if len(extended_recommendation_object) <= 0:
+                  print_help(var='EXTENDED BULK CREATE IN RECOMMENDATION UPDATE', username='SERVER TRAINING')
+  
+                  recommendations = []
+                  for count, item in enumerate(extended_recommendation, 1):
+                      _id = item
+                      if is_show_score:
+                          _id = item[0]
+                          
+                      recommendations.append(ExtendedRecommendation(user_id = unique_user_obj.id, 
+                                                              product_id = _id, 
+                                                              rank = count, 
+                                                              created_at = now))
+  
+                  # Bulk Create Extended Recommendation
+                  ExtendedRecommendation.objects.bulk_create(recommendations)
+                  print_help(var='EXTENDED BULK UPDATE IN RECOMMENDATION UPDATE', username='SERVER TRAINING')
+                  
+                else:
+                
+                  # Zip QuerySet Recommendation and Extended Recommendation and Then Enumerate from 1
+                  for count, (rec, item) in enumerate(zip(extended_recommendation_object, extended_recommendation), 1):
+                      rec.product_id = item[0]
+                      rec.rank = count
+                      rec.created_at = now
+                  
+                  # Bulk Update Recommendation
+                  ExtendedRecommendation.objects.bulk_update(extended_recommendation_object, fields=['product_id','rank','created_at'])
 
         print_help(var='TRAINING DONE', username='SERVER TRAINING')
         return JsonResponse({
