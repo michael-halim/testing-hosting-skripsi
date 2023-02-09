@@ -1,7 +1,7 @@
 # Import Function from .views
 from .views import create_random_recommendation
 from .helper import *
-from .models import Log, Distance, Recommendation, User, Item
+from .models import Log, Distance, Recommendation, User, Item, ExtendedRecommendation
 
 from django.db.models import Q, Max
 from django.http import JsonResponse
@@ -339,7 +339,7 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
 
 def train_model():
     is_show_score = True
-    all_hybrid_recommendation = []
+    all_hybrid_recommendation, extended_recommendation = [], []
     
     unique_user = User.objects.all()
     
@@ -549,14 +549,24 @@ def train_model():
 
                             co += 1
 
+                    extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+                    for rec in all_hybrid_recommendation:
+                        for co, other_rec in enumerate(extended_recommendation):
+                            if rec[0] == other_rec[0]: 
+                                extended_recommendation.pop(co)
+                                break
+                    
+                    extended_recommendation = all_hybrid_recommendation + extended_recommendation
                     print_help(all_hybrid_recommendation, 'ALL HYBRID RECOMMENDATION', username='SERVER TRAINING')
 
             else:
                 # RANDOM RECOMMENDATION
                 print_help(var='RANDOM RECOMMENDATION', username='SERVER TRAINING')
-                all_hybrid_recommendation = create_random_recommendation()
+                extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+                all_hybrid_recommendation = extended_recommendation[ :TOTAL_WINDOW ]
 
             recommendation_object = Recommendation.objects.filter(user_id = unique_user_obj.id).order_by('rank')
+            extended_recommendation_object = ExtendedRecommendation.objects.filter(user_id = unique_user_obj.id).order_by('rank')
 
             now = datetime.now(ZoneInfo('Asia/Bangkok'))
 
@@ -577,6 +587,22 @@ def train_model():
                 # Bulk Create Recommendation
                 Recommendation.objects.bulk_create(recommendations)
 
+                print_help(var='EXTENDED BULK CREATE', username='SERVER TRAINING')
+
+                recommendations = []
+                for count, item in enumerate(extended_recommendation, 1):
+                    _id = item
+                    if is_show_score:
+                        _id = item[0]
+                        
+                    recommendations.append(ExtendedRecommendation(user_id = unique_user_obj.id, 
+                                                            product_id = _id, 
+                                                            rank = count, 
+                                                            created_at = now))
+
+                # Bulk Create Extended Recommendation
+                ExtendedRecommendation.objects.bulk_create(recommendations)
+
             else:
                 print_help(var='BULK UPDATE', username='SERVER TRAINING')
 
@@ -588,6 +614,17 @@ def train_model():
                 
                 # Bulk Update Recommendation
                 Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
+
+                print_help(var='EXTENDED BULK UPDATE', username='SERVER TRAINING')
+
+                # Zip QuerySet Recommendation and Extended Recommendation and Then Enumerate from 1
+                for count, (rec, item) in enumerate(zip(extended_recommendation_object, extended_recommendation), 1):
+                    rec.product_id = item[0]
+                    rec.rank = count
+                    rec.created_at = now
+                
+                # Bulk Update Recommendation
+                ExtendedRecommendation.objects.bulk_update(extended_recommendation_object, fields=['product_id','rank','created_at'])
 
         print_help(var='TRAINING DONE', username='SERVER TRAINING')
         return JsonResponse({

@@ -12,7 +12,7 @@ from django.db.models import Q, Max, Min
 
 from .forms import CreateUserForm
 from .decorators import unauthenticated_user
-from .models import Item, Log, Like, Recommendation, User, ItemDetail
+from .models import Item, Log, Like, Recommendation, User, ItemDetail, ExtendedRecommendation
 from .helper import *
 
 from zoneinfo import ZoneInfo
@@ -625,7 +625,7 @@ def handle_question(request):
     """Handle Question and Set Recommendation to DB"""
 
     is_show_score = True
-    all_hybrid_recommendation = []
+    all_hybrid_recommendation, extended_recommendation = [], []
     if request.POST:
         # Get POST Request
         post_dict = dict(request.POST)
@@ -666,7 +666,12 @@ def handle_question(request):
             # If All of the Question left Unanswered
 
             print_help(var='ALL QUESTION LEFT UNANSWERED', username=request.user.username)
-            all_hybrid_recommendation = create_random_recommendation()
+            
+            extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+            all_hybrid_recommendation = extended_recommendation[ :TOTAL_WINDOW ]
+
+            print_help(all_hybrid_recommendation, 'ALL HYBRID RECOMMENDATION RANDOM', username=request.user.username)
+            print_help(extended_recommendation, 'EXTENDED RECOMMENDATION RANDOM', username=request.user.username)
 
         else:
             # If One or More of the Question is Answered
@@ -724,14 +729,26 @@ def handle_question(request):
             for rec_id in recommended_ids:
                 all_hybrid_recommendation.append([rec_id, 0.0])
 
+            extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+            for rec in all_hybrid_recommendation:
+                for co, other_rec in enumerate(extended_recommendation):
+                    if rec[0] == other_rec[0]: 
+                        extended_recommendation.pop(co)
+                        break
+            
+            extended_recommendation = all_hybrid_recommendation + extended_recommendation
             print_help(all_hybrid_recommendation, 'ALL HYBRID RECOMMENDATION WITH QUESTION', username=request.user.username)
 
     else:      
         # If Choose Not to Answer the Question
-        all_hybrid_recommendation = create_random_recommendation()
+        extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+        all_hybrid_recommendation = extended_recommendation[ :TOTAL_WINDOW ]
+
         print_help(all_hybrid_recommendation, 'ALL HYBRID RECOMMENDATION RANDOM', username=request.user.username)
+        print_help(extended_recommendation, 'EXTENDED RECOMMENDATION RANDOM', username=request.user.username)
 
     recommendation_object = Recommendation.objects.filter(user_id = request.user.id).order_by('rank')
+    extended_recommendation_object = ExtendedRecommendation.objects.filter(user_id = request.user.id).order_by('rank')
 
     now = datetime.now(ZoneInfo('Asia/Bangkok'))
 
@@ -743,7 +760,7 @@ def handle_question(request):
             _id = item
             if is_show_score:
                 _id = item[0]
-                
+
             recommendations.append(Recommendation(user_id = request.user.id, 
                                                     product_id = _id, 
                                                     rank = count, 
@@ -751,6 +768,25 @@ def handle_question(request):
 
         # Bulk Create Recommendation
         Recommendation.objects.bulk_create(recommendations)
+
+        print_help(var='EXTENDED BULK CREATE', username=request.user.username)
+
+        recommendations = []
+        for count, item in enumerate(extended_recommendation, 1):
+            _id = item
+            if is_show_score:
+                _id = item[0]
+            
+            recommendations.append(ExtendedRecommendation(user_id = request.user.id, 
+                                                    product_id = _id, 
+                                                    rank = count, 
+                                                    created_at = now))
+
+        print_help(var=recommendations, title='EXTENDED RECOMMENDATIONS', username=request.user.username)
+
+        # Bulk Create Extended Recommendation
+        ExtendedRecommendation.objects.bulk_create(recommendations)
+
     else:
         print_help(var='BULK UPDATE', username=request.user.username)
 
@@ -763,17 +799,27 @@ def handle_question(request):
         # Bulk Update Recommendation
         Recommendation.objects.bulk_update(recommendation_object, fields=['product_id','rank','created_at'])
 
+        print_help(var='EXTENDED BULK UPDATE', username=request.user.username)
+        # Zip QuerySet Recommendation and Extended Recommendation and Then Enumerate from 1
+        for count, (rec, item) in enumerate(zip(extended_recommendation_object, extended_recommendation), 1):
+            rec.product_id = item[0]
+            rec.rank = count
+            rec.created_at = now
+        
+        # Bulk Create Extended Recommendation
+        ExtendedRecommendation.objects.bulk_update(extended_recommendation_object, fields=['product_id','rank','created_at'])
+
 def create_random_recommendation(limit = TOTAL_WINDOW):
     """Return Random Recommendation
     >>> recsys = create_random_recommendations(limit=TOTAL_WINDOW)
     >>> print(recsys)
     [[item.id, 0.0]]
     """
-    count = Item.objects.count()
+    count = Item.objects.filter(status=1).count()
     all_hybrid_recommendation = []
     for _ in range(limit):
         # Fetching Random Item and Append it to Object and Give Score of 0 Because it is Random
-        item_object = Item.objects.all()[randint(0, count - 1)]
+        item_object = Item.objects.filter(status=1)[randint(0, count - 1)]
         all_hybrid_recommendation.append([item_object.id, 0.0])
 
     return all_hybrid_recommendation
@@ -811,7 +857,7 @@ def ranking(request):
                 like_ranks = []
 
                 for item_id in like_logs:
-                    recommended_item = Recommendation.objects.filter(user_id=_id, product_id=item_id)
+                    recommended_item = ExtendedRecommendation.objects.filter(user_id=_id, product_id=item_id)
                     if len(recommended_item) <= 0:
                         like_ranks.append(int(TOTAL_WINDOW) + 1)
                     elif len(recommended_item) == 1:

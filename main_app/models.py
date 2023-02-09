@@ -136,6 +136,12 @@ class Recommendation(models.Model):
     rank = models.IntegerField()
     created_at = models.DateTimeField()
 
+class ExtendedRecommendation(models.Model):
+    user_id = models.IntegerField()
+    product_id = models.IntegerField()
+    rank = models.IntegerField()
+    created_at = models.DateTimeField()
+
 class ItemDetail(models.Model):
     product_id = models.IntegerField()
     views = models.IntegerField()
