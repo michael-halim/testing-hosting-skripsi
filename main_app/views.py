@@ -368,7 +368,7 @@ def categoryPage(request,category):
     category = category.replace('-',' ')
     
     # Get All Recommendations Based On User ID
-    recommendations = Recommendation.objects.filter(user_id=request.user.id)
+    recommendations = ExtendedRecommendation.objects.filter(user_id=request.user.id).order_by('rank')
 
     # Get All Recommendation ID and Get the Item to access furniture location
     recommended_product_ids = [ rec.product_id for rec in recommendations ]
@@ -380,29 +380,10 @@ def categoryPage(request,category):
         if recommendation_item[product_id].furniture_location == category:
             recommended_ids.append(product_id)
 
-    # Add Other Product Id that are not saved in Recommendation Table
-    all_category_ids = Item.objects.filter(furniture_location__contains=category).values_list('id', flat=True)
-    all_category_ids = list(all_category_ids)
-
-    not_recommended_ids = []
-    for product_id in all_category_ids:
-        if product_id not in recommended_ids:
-            not_recommended_ids.append(product_id)
-    
-    # Random Pop until X Value Remaining
-    while len(not_recommended_ids) > TOTAL_WINDOW :
-        not_recommended_ids.pop(randrange(len(not_recommended_ids)))
-
-    # Random Append to Recommended Product Ids
-    while len(not_recommended_ids) > 0:
-        recommended_ids.append(not_recommended_ids.pop(randrange(len(not_recommended_ids))))
-
-
     # Select Item with Product Ids In Bulk
     recommendation_item = Item.objects.in_bulk(recommended_ids)
 
     items = [ recommendation_item[product_id] for product_id in recommended_ids ]
-
 
     print_help(items, 'RECOMMENDED ITEMS BASED ON CATEGORY', username=request.user.username)
 
