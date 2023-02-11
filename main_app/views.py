@@ -102,10 +102,35 @@ class HomeView(LoginRequiredMixin, ListView):
 
         print_help(var='TAKE RECOMMENDATION FROM DB', username=self.request.user.username)
         recommendations = ExtendedRecommendation.objects.filter(user_id = self.request.user.id).order_by('rank')
+        recommended_product_ids = []
         
-        # Get Recommended Product Ids
-        recommended_product_ids = [ rec.product_id for rec in recommendations ]
-        recommended_product_ids = recommended_product_ids[ : 6 * TOTAL_WINDOW ]
+        if len(recommendations) <= 0:
+            recommendations = Recommendation.objects.filter(user_id = self.request.user.id).order_by('rank')
+
+            # Get Recommended Product Ids
+            recommended_product_ids = [ rec.product_id for rec in recommendations ]
+
+            # Add Other Product Id that are not saved in Recommendation Table
+            all_product_ids = Item.objects.all().values_list('id', flat=True)
+            all_product_ids = list(all_product_ids)
+
+            tmp = []
+            for product_id in all_product_ids:
+                if product_id not in recommended_product_ids:
+                    tmp.append(product_id)
+
+            # Random Pop until X Value Remaining
+            while len(tmp) > 6 * TOTAL_WINDOW:
+                tmp.pop(randrange(len(tmp)))
+
+            # Random Append to Recommended Product Ids
+            while len(tmp) > 0:
+                recommended_product_ids.append(tmp.pop(randrange(len(tmp))))
+
+        else:
+            # Get Recommended Product Ids
+            recommended_product_ids = [ rec.product_id for rec in recommendations ]
+            recommended_product_ids = recommended_product_ids[ : 6 * TOTAL_WINDOW ]
 
         print_help(var='BULK SELECT', username=self.request.user.username)
 
