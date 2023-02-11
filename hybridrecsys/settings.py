@@ -9,13 +9,16 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = False
-DEBUG = True
+DEBUG = True if os.environ.get('DEBUG_MODE') == 'True' else False
 
 # DEVELOPMENT_MODE = False
-DEVELOPMENT_MODE = True
+DEVELOPMENT_MODE = True if os.environ.get('DEVELOPMENT_MODE') == 'True' else False
 
 from pathlib import Path
 import os
@@ -34,7 +37,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '$%%^*&^^&*(%kjashdlkasgdljkasdS&^%%^&%^&*(fcr)p33ypsh+#4d!jmf3fikaewh^&hkb++&vy-(*%dwe^8f3!sjkadfsjkhsdfjkhlsdfjkh'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 ALLOWED_HOSTS = ['*']
@@ -89,30 +92,16 @@ WSGI_APPLICATION = 'hybridrecsys.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-if DEVELOPMENT_MODE is True:
-    # LOCALHOST DATABASE
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'skripsi',
-            'USER': 'postgres',
-            'PASSWORD': 'postgrework',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
     }
-else:
-    # PRODUCTION DATABASE
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'skripsi',
-            'USER': 'postgres',
-            'PASSWORD': 'postgrework',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
