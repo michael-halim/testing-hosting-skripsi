@@ -154,8 +154,8 @@ def train_apriori_model(apriori_unique_user_ids):
     # Train Apriori
     print_help(var='APRIORI MODEL', username='TRAIN APRIORI MODEL')
     _, rules = apriori(transactions=apriori_product_ids, 
-                    min_support=0.45, 
-                    min_confidence=0.55)
+                    min_support=0.1, 
+                    min_confidence=0.1)
 
     # Convert to pandas.DataFrame
     df = pd.DataFrame(rules)
