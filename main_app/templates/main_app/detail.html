@@ -365,7 +365,7 @@
         </div>
         <div class="col-md-3 col-12 mt-sm-4 original-link-wrapper">
             <div class="row">
-                {% if item.phone %}
+                {% if item.phone and not '*' in item.phone %}
                 <span class="d-inline-block" 
                             data-bs-toggle="popover" 
                             data-bs-trigger="hover" 

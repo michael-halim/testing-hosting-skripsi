@@ -101,27 +101,11 @@ class HomeView(LoginRequiredMixin, ListView):
         """
 
         print_help(var='TAKE RECOMMENDATION FROM DB', username=self.request.user.username)
-        recommendations = Recommendation.objects.filter(user_id = self.request.user.id).order_by('rank')
+        recommendations = ExtendedRecommendation.objects.filter(user_id = self.request.user.id).order_by('rank')
         
         # Get Recommended Product Ids
         recommended_product_ids = [ rec.product_id for rec in recommendations ]
-        
-        # Add Other Product Id that are not saved in Recommendation Table
-        all_product_ids = Item.objects.all().values_list('id', flat=True)
-        all_product_ids = list(all_product_ids)
-
-        tmp = []
-        for product_id in all_product_ids:
-            if product_id not in recommended_product_ids:
-                tmp.append(product_id)
-        
-        # Random Pop until X Value Remaining
-        while len(tmp) > 6 * TOTAL_WINDOW:
-            tmp.pop(randrange(len(tmp)))
-
-        # Random Append to Recommended Product Ids
-        while len(tmp) > 0:
-            recommended_product_ids.append(tmp.pop(randrange(len(tmp))))
+        recommended_product_ids = recommended_product_ids[ : 6 * TOTAL_WINDOW ]
 
         print_help(var='BULK SELECT', username=self.request.user.username)
 
@@ -377,9 +361,10 @@ def handle_copy(request):
 
     return JsonResponse(context)
 
-@unauthenticated_user
+@login_required(login_url='main_app:home')
 def categoryPage(request,category):
     """Handle Category Page"""
+    print_help(var='ENTER CATEGORY PAGE VIEWS', username=request.user.username)
     category = category.replace('-',' ')
     
     # Get All Recommendations Based On User ID
@@ -859,6 +844,8 @@ def ranking(request):
                 # print(logs.query)
                 like_logs = Log.objects.filter(user_id= _id, event_type='LIKE', timestamp_in__range=[start_at, end_at])
                 like_logs = [ log.product_id for log in like_logs ]
+                like_logs = list(dict.fromkeys([ log for log in like_logs ]))
+
                 like_ranks = []
 
                 for item_id in like_logs:

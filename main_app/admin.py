@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Item, Log, Like,Feature, Distance, Recommendation
+from .models import Item, Log, Like,Feature, Distance, Recommendation, ItemDetail, TempItem, ExtendedRecommendation
 from django import forms
 import pprint
 from django.forms import TextInput, Textarea, URLInput
@@ -43,6 +43,20 @@ class ItemAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows':20, 'cols':100})},
     }
 
+class TempItemAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug':('name',)}
+    search_fields = ['name__icontains','material__icontains','furniture_location__icontains', 
+                        'address__icontains', 'price__icontains', 'color__icontains']
+    list_filter = ('furniture_location','color','material',)
+    list_display = ('id','name','material', 'color','furniture_location','price',)
+    list_display_links = ('id','name','material', 'color','furniture_location','price',)
+    
+    list_per_page = 100
+    formfield_overrides = {
+        models.CharField: {'widget': TextInput(attrs={'size':'100'})},
+        models.TextField: {'widget': Textarea(attrs={'rows':20, 'cols':100})},
+    }
+
 class FeatureAdmin(admin.ModelAdmin):
     list_per_page = 20
     
@@ -53,10 +67,23 @@ class DistanceAdmin(admin.ModelAdmin):
     list_display = ('product_id','other_product_id','name_distance','material_distance', 'color_distance','description_distance', 'weight_distance', 'price_distance', 'dimension_distance', 'furniture_location_distance','total_distance','temp_distance',)
     list_display_links = ('product_id','other_product_id','name_distance','material_distance', 'color_distance','description_distance', 'weight_distance', 'price_distance', 'dimension_distance', 'furniture_location_distance','total_distance','temp_distance',)
     list_per_page = 150
+
 class RecommendationAdmin(admin.ModelAdmin):
     search_fields = ['user_id__exact']
     list_display = ('user_id','product_id','rank','created_at',)
     list_display_links = ('user_id','product_id','rank','created_at',)
+    list_per_page = 150
+
+class ExtendedRecommendationAdmin(admin.ModelAdmin):
+    search_fields = ['user_id__exact']
+    list_display = ('user_id','product_id','rank','created_at',)
+    list_display_links = ('user_id','product_id','rank','created_at',)
+    list_per_page = 150
+
+class ItemDetailAdmin(admin.ModelAdmin):
+    search_fields = ['product_id__exact']
+    list_display = ('product_id','views','likes','see_original', 'copied_phone', 'copied_address',)
+    list_display_links = ('product_id','views','likes','see_original', 'copied_phone', 'copied_address',)
     list_per_page = 150
 
 admin.site.register(Item,ItemAdmin)
@@ -66,6 +93,9 @@ admin.site.register(Session, SessionAdmin)
 admin.site.register(Feature, FeatureAdmin)
 admin.site.register(Distance, DistanceAdmin)
 admin.site.register(Recommendation, RecommendationAdmin)
+admin.site.register(ItemDetail, ItemDetailAdmin)
+admin.site.register(ExtendedRecommendation, ExtendedRecommendationAdmin)
+admin.site.register(TempItem, TempItemAdmin)
 
 
 admin.site.site_header  =  'Website Skripsi Admin Panel' 
