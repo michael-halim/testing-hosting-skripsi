@@ -402,7 +402,7 @@ def categoryPage(request,category):
     # Select Recommended Item
     recommended_ids = []    
     for product_id in recommended_product_ids:
-        if recommendation_item[product_id].furniture_location == category:
+	if category in recommendation_item[product_id].furniture_location:
             recommended_ids.append(product_id)
 
     # Select Item with Product Ids In Bulk

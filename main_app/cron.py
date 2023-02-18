@@ -124,7 +124,7 @@ def train_als_model(user_id, is_refresh_time_based):
         print_help(var='TRAINING UCF MODEL', username='TRAIN ALS MODEL')
         
         # Train UCF Model
-        ucf_model = AlternatingLeastSquares(factors=64, regularization=0.05)
+        ucf_model = AlternatingLeastSquares(factors=128, regularization=0.2)
         ucf_model.fit(2 * user_product_matrix)
 
         dump_model(ucf_model, dest_path)
