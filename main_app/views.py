@@ -402,7 +402,7 @@ def categoryPage(request,category):
     # Select Recommended Item
     recommended_ids = []    
     for product_id in recommended_product_ids:
-	if category in recommendation_item[product_id].furniture_location:
+        if category in recommendation_item[product_id].furniture_location:
             recommended_ids.append(product_id)
 
     # Select Item with Product Ids In Bulk
@@ -865,7 +865,10 @@ def ranking(request):
                 # print(len(like_ranks))
                 avg_ranks = 0
                 if not float(len(like_ranks)) == 0:
-                    avg_ranks = float(sum(like_ranks)) / float(len(like_ranks))
+                    try:
+                        avg_ranks = float(sum(like_ranks)) / float(len(like_ranks))
+                    except ZeroDivisionError:
+                        avg_ranks = 0
                 
                 print_help(avg_ranks, 'AVG RANKS', username=request.user.username)
 
@@ -876,7 +879,7 @@ def ranking(request):
                     product_ids.append(record.product_id)
                     event_types.append(record.event_type)
                     timestamp_deltas.append(record.timestamp_delta)
-                    ranks.append(record.rank)
+                    ranks.append(int(record.rank) + 1)
 
                 data = {'user_id':user_ids,
                         'product_id': product_ids,
@@ -888,30 +891,49 @@ def ranking(request):
 
                 print('LOG RANKING')
                 print(ranking_df)
-
-                print_help(ranks, 'RANKS CHOOSEN', username=request.user.username)
-
-                mrr_score = mrr_at_k(ranks)
-                print_help(mrr_score, 'MRR @ K', username=request.user.username)
-
-                distinct_rank = list(dict.fromkeys([ rank for rank in ranks ]))
-                print_help(distinct_rank, 'DISTINCT RANK', username=request.user.username)
-
-                max_rank = max(distinct_rank)
-
-                # binary_ndcg = [0] * TOTAL_WINDOW
-                binary_ndcg = [0] * (max_rank + 1)
-
-                for rank in distinct_rank:
-                    binary_ndcg[rank] = 1
-
-                print_help(binary_ndcg, 'BINARY NDCG', username=request.user.username)
                 
-                ndcg_score = ndcg_at_k(binary_ndcg, TOTAL_WINDOW, method = 1)
-                print_help(ndcg_score, 'NDCG @ K', username=request.user.username)
-
-                user_array.append([_id, mrr_score, ndcg_score, like_logs, like_ranks, avg_ranks])
-
+                if len(ranks) > 0:
+                    try:
+                      print_help(ranks, 'RANKS CHOOSEN', username=request.user.username)
+                      
+                      binary_mrr = []
+                      for rank in ranks:
+                          if rank <= (TOTAL_WINDOW - 1):
+                              tmp_binary = [0] * TOTAL_WINDOW
+                              tmp_binary[rank] = 1
+    
+                          binary_mrr.append(tmp_binary)
+                                
+                      mrr_score = mean_reciprocal_rank([binary_mrr])  
+                              
+                      print_help(mrr_score, 'MRR @ K', username=request.user.username)
+      
+                      distinct_rank = list(dict.fromkeys([ rank for rank in ranks ]))
+                      print_help(distinct_rank, 'DISTINCT RANK', username=request.user.username)
+      
+                      max_rank = max(distinct_rank)
+      
+                      # binary_ndcg = [0] * TOTAL_WINDOW
+                      binary_ndcg = [0] * (max_rank + 1)
+      
+                      for rank in distinct_rank:
+                          binary_ndcg[rank-1] = 1
+      
+                      print_help(binary_ndcg, 'BINARY NDCG', username=request.user.username)
+                      
+                      ndcg_score = ndcg_at_k(binary_ndcg, TOTAL_WINDOW, method = 1)
+                      print_help(ndcg_score, 'NDCG @ K', username=request.user.username)
+      
+                      user_array.append([_id, mrr_score, ndcg_score, like_logs, like_ranks, avg_ranks])
+                    
+                    except ZeroDivisionError as zde:
+                        print(zde)
+                        print('zde in mrr@k and ndcg@k')
+                        user_array.append([_id, 0.0, 0.0, like_logs, like_ranks, avg_ranks])
+                      
+                  else:
+                      user_array.append([_id, 0.0, 0.0, like_logs, like_ranks, avg_ranks])
+                        
         except ZeroDivisionError as zde:
             print(zde)
 

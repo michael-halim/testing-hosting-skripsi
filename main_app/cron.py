@@ -226,7 +226,11 @@ def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total
             print('MAX ID CONTINUE')
             continue
         else:
-            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))[0]
+            distance_object = Distance.objects.filter(Q(product_id =_id) | Q(other_product_id = _id))
+            if distance_object.count() > 0:
+                distance_object = distance_object[0]
+            else:
+                continue
 
         # print_help(var=distance_object,title='DISTANCE OBJECT CHECK', username='SERVER TRAINING')
         if distance_object.feature_added == FEATURES and distance_object.temp_distance != 99.0:

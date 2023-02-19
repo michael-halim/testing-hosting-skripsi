@@ -75,15 +75,17 @@ Ranking
         </thead>
         <tbody>
             {% for user in user_data %}
-            <tr>
-                <td scope="row">{{user.0}}</td>
-                <td scope="row">{{user.1|floatformat:4}}</td>
-                <td scope="row">{{user.2|floatformat:4}}</td>
-                <td scope="row">{{user.6}}</td>
-                <td scope="row">{{user.3}}</td>
-                <td scope="row">{{user.4}}</td>
-                <td scope="row">{{user.5|floatformat:4}}</td>
-            </tr>
+	    	{% if user.1 != 0 and user.2 != 0 and user.5 != 0 %}
+	            <tr>
+	                <td scope="row">{{user.0}}</td>
+	                <td scope="row">{{user.1|floatformat:4}}</td>
+	                <td scope="row">{{user.2|floatformat:4}}</td>
+	                <td scope="row">{{user.6}}</td>
+	                <td scope="row">{{user.3}}</td>
+	                <td scope="row">{{user.4}}</td>
+	                <td scope="row">{{user.5|floatformat:4}}</td>
+	            </tr>
+		{% endif  %}
             {% endfor %}
         </tbody>
     </table>
