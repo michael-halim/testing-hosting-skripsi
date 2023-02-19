@@ -903,8 +903,10 @@ def ranking(request):
                                 tmp_binary[rank] = 1
 
                             binary_mrr.append(tmp_binary)
-                                
-                        mrr_score = mean_reciprocal_rank([binary_mrr])  
+
+                        print_help(binary_mrr, 'BINARY MRR', username=request.user.username)
+
+                        mrr_score = mean_reciprocal_rank(binary_mrr)  
                                 
                         print_help(mrr_score, 'MRR @ K', username=request.user.username)
         
