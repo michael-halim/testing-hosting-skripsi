@@ -58,7 +58,11 @@ class HomeView(LoginRequiredMixin, ListView):
 
         item_object = Item.objects.all()
         colors = list(dict.fromkeys([ item.color for item in item_object if item.color != '' ]))
-        exception_word = ['natural', 'leather', 'olives', 'leopard', 'frame', 'lion', 'bengal', 'wolf', 'tibetan', 'menarik', 'disesuaikan', 'teak', 'invory']
+        exception_word = ['natural', 'leather', 'olives', 'leopard', 'frame', 'lion', 'bengal', 'wolf', 
+                          'tibetan', 'menarik', 'disesuaikan', 'teak', 'invory', 'pulut', 'hitam', 'merah', 
+                          'kuning', 'agave', 'salice', 'corallo', 'bright', 'tortora', 'marble', 'wash', 'toska', 
+                          'dark', 'base', 'distressed', 'olive', 'antracite', 'senape', 'colors', 'tone']
+                          
         addition_word = ['natural']
         filtered_colors = []
         
