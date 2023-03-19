@@ -19,7 +19,12 @@ from zoneinfo import ZoneInfo
 from random import randint, randrange
 from operator import or_
 from functools import reduce
+from joblib import dump as dump_model, load as load_model
+from scipy.sparse import coo_matrix
+from implicit.als import AlternatingLeastSquares
+from implicit.nearest_neighbours import bm25_weight
 
+import platform
 import pandas as pd
 import re
 
@@ -297,6 +302,30 @@ class DetailPostView(LoginRequiredMixin,View):
         has_liked = False
         if Like.objects.filter(user_id = request.user.id,product_id = item.id):
             has_liked = True
+        
+        all_hybrid_recommendation = train_als_model(request.user.id)
+        extended_recommendation_object = ExtendedRecommendation.objects.filter(user_id = request.user.id).order_by('rank')
+        extended_recommendation = None
+        now = datetime.now(ZoneInfo('Asia/Bangkok'))
+
+        if len(extended_recommendation_object) <= 0:
+            extended_recommendation = create_random_recommendation(limit=Item.objects.filter(status=1).count())
+            for rec in all_hybrid_recommendation:
+                for co, other_rec in enumerate(extended_recommendation):
+                    if rec[0] == other_rec[0]: 
+                        extended_recommendation.pop(co)
+                        break
+
+            extended_recommendation = all_hybrid_recommendation + extended_recommendation
+
+        else:
+            for ext_rec, rec in zip(extended_recommendation_object, all_hybrid_recommendation):
+                ext_rec.product_id = rec[0]
+                ext_rec.created_at = now
+
+            ExtendedRecommendation.objects.bulk_update(extended_recommendation_object, fields=['product_id','created_at'])
+        
+        print_help(all_hybrid_recommendation, 'ALL HYBRID RECOMMENDATION', username='SERVER TRAINING')
 
         context = {
             'item':item,
@@ -955,3 +984,123 @@ def mobile(request):
         return True
 
     return False
+
+def create_random_recommendation(limit = TOTAL_WINDOW):
+    """Return Random Recommendation
+    >>> recsys = create_random_recommendations(limit=TOTAL_WINDOW)
+    >>> print(recsys)
+    [[item.id, 0.0]]
+    """
+    # Fetching All Item That Active
+    random_recommendation = Item.objects.filter(status=1)
+    # Give Score of 0 Because it is Random
+    random_recommendation = [ [rec.id, 0.0] for rec in random_recommendation ]
+
+    for i in range(len(random_recommendation)):
+        random_number = randint(0, len(random_recommendation)-1)
+        random_recommendation[i], random_recommendation[random_number] = \
+            random_recommendation[random_number], random_recommendation[i]
+    
+    random_recommendation = random_recommendation[:limit]
+
+    return random_recommendation
+
+def creation_date(path_to_file):
+    """
+    Try to get the date that a file was created, falling back to when it was
+    last modified if that isn't possible.
+    """
+    if platform.system() == 'Windows':
+        return os.path.getctime(path_to_file)
+    else:
+        stat = os.stat(path_to_file)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
+        
+def train_als_model(user_id):
+    print_help(var='ALS MODEL', username='TRAIN ALS MODEL')
+
+    ucf_logs = Log.objects.all()
+
+    # Get ids, product_ids, event_types, timestamp_deltas
+    ucf_user_ids, ucf_product_ids, ucf_event_types, ucf_timestamp_deltas = [], [], [], []
+    for record in ucf_logs:
+        ucf_user_ids.append(record.user_id)
+        ucf_product_ids.append(record.product_id)
+        ucf_event_types.append(record.event_type)
+        ucf_timestamp_deltas.append(record.timestamp_delta)
+    
+    data_ucf = {'user_id':ucf_user_ids,
+                'product_id': ucf_product_ids,
+                'event_type': ucf_event_types,
+                'timestamp_delta': ucf_timestamp_deltas }
+
+    ucf_df = pd.DataFrame(data=data_ucf)
+
+    # Add Event Strength
+    ucf_df['event_strength'] = ucf_df['event_type'].apply(lambda x: EVENT_TYPE_STRENGTH[x])
+
+    # Group UCF By user_id and product_id and sum the event_strength
+    ucf_grouped_df = ucf_df.groupby(['user_id','product_id']).sum().reset_index()
+    print('============================================')
+    print(ucf_grouped_df)
+    print('============================================')
+
+    # Construct product_ids, user_ids, and event_strength to coo_matrix (Coordinate Matrix)
+    ucf_matrix_product_ids = ucf_grouped_df['product_id']
+    ucf_matrix_user_ids = ucf_grouped_df['user_id']
+    ucf_matrix_event_strength = ucf_grouped_df['event_strength']
+
+    # Make Coordinate Matrix
+    product_user_matrix = coo_matrix((ucf_matrix_event_strength, (ucf_matrix_product_ids, ucf_matrix_user_ids)))
+    product_user_matrix = bm25_weight(product_user_matrix, K1=100, B=0.8)
+
+    # Transpose product_user_matrix to user_product_matrix
+    user_product_matrix = product_user_matrix.T.tocsr()
+
+    # Use Already Existed Model if Path Exists and Create One if Doesn't
+    dirname = os.path.dirname(__file__)
+    up_two_levels = os.pardir + os.sep + os.pardir
+    filename = 'als_model.sav'
+    dest_path = os.path.join(dirname, up_two_levels, filename)
+    
+    if os.path.exists(dest_path):
+      epoch_time = creation_date(dest_path)
+      current_time = datetime.fromtimestamp(epoch_time)
+      zone_time = current_time.astimezone(ZoneInfo('Asia/Bangkok')) 
+  
+      time_diff = datetime.now(ZoneInfo('Asia/Bangkok')) - zone_time
+      print_help(var=creation_date(dest_path), title='EPOCH TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=current_time, title='CURRENT TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print_help(var=zone_time, title='ZONE TIME CREATION OR MODIFIED DATE FILE', username='SERVER TRAINING')
+      print('TIME DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(time_diff.days, time_diff.seconds // 60))
+
+    ucf_model = None
+    
+    if os.path.exists(dest_path) and (time_diff.days <= REFRESH_RECSYS_DAYS and (time_diff.seconds // 60) < REFRESH_RECSYS_MINUTE):
+        
+        print_help(var='LOAD UCF MODEL', username='TRAIN ALS MODEL')
+
+        ucf_model = load_model(dest_path)
+
+    else:
+        print_help(var='TRAINING UCF MODEL', username='TRAIN ALS MODEL')
+        
+        # Train UCF Model
+        ucf_model = AlternatingLeastSquares(factors=128, regularization=0.2)
+        ucf_model.fit(2 * user_product_matrix)
+
+        dump_model(ucf_model, dest_path)
+
+    ids, scores = ucf_model.recommend(user_id, user_product_matrix[user_id], N=50, filter_already_liked_items=False)
+
+    # Save ids and score from recommendation in the form of tuple (id, score)
+    ALS_result = [ (_id, score) for _id, score in zip(ids.tolist(), scores.tolist())]
+
+    print_help(ALS_result, 'ALS RESULT', 'TRAIN ALS MODEL')
+    
+    return ALS_result
