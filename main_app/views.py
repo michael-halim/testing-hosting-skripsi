@@ -83,14 +83,8 @@ class HomeView(LoginRequiredMixin, ListView):
         diff = datetime.now(local_tz) - user.date_joined.astimezone(local_tz)
         print('USER MODAL DIFFERENCE: {0} DAY(S), {1} MINUTE(S)'.format(diff.days, diff.seconds // 60))
 
-        # If it's still 1 minutes since creating an account, show modal
-        is_show_modal = False        
-        if diff.days <= 0 and (diff.seconds <= 20):
-            is_show_modal = True
-
         print_help(True, 'IS SHOW MODAL INDEX', username=self.request.user.username)
 
-        data['is_show_modal'] = is_show_modal
         data['request_path'] = self.request.path
         data['is_mobile'] = mobile(request=self.request)
 
@@ -250,12 +244,11 @@ class SearchView(LoginRequiredMixin, ListView):
             hmax = max_price
 
         test_query = self.model.objects.filter(reduce_query_furniture_location, reduce_query_is_product, 
-                                        Q(name__icontains = q) | Q(description__icontains = q) | Q(additional_desc__icontains = q), 
-                                        price__gte = hmin, price__lte=hmax )
+                                                name__icontains = q, price__gte = hmin, price__lte=hmax )
+        
         # Filter Item with Options and Make it to List so that it can be randomized
         items = list(self.model.objects.filter(reduce_query_furniture_location, reduce_query_is_product, 
-                                        Q(name__icontains = q) | Q(description__icontains = q) | Q(additional_desc__icontains = q), 
-                                        price__gte = hmin, price__lte=hmax ))
+                                                name__icontains = q, price__gte = hmin, price__lte=hmax ))
         print(test_query.query)
         # Randomized Position
         for i in range(len(items)):

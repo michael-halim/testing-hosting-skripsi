@@ -82,16 +82,11 @@
         else{
             $('.dropdown-category').hide();
             $('#icon-category-dropdown > i').addClass('fa-caret-down')
-
         }
 
         $('body').on('click','#category',function(){
-            // $('.dropdown-category').css({
-            //    'animation': 'fadeIn 1s'
-            // });
             $('.dropdown-category').slideToggle('slow');
             toggleCaretIcon();
-
         });
         $('body').on('click','#logout',function(){
             if (confirm('Are You Sure You Want to Logout ?')){
@@ -202,6 +197,16 @@
                 </div>
             </a>
         </div>
+        <a class="dropdown-item ask-question">
+            <div class="row menu">
+                <div class="col-2">
+                    <i class="fa-solid fa-question"></i>
+                </div>
+                <div class="col-10">
+                    Ask Me Question
+                </div>
+            </div>
+        </a>
         <a class="dropdown-item {% if request.path == '/favorite/' %} selected {% endif %}"
             href="{% url 'main_app:favorite-item' %}">
             <div class="row menu">

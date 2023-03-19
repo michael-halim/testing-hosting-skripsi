@@ -8,7 +8,7 @@ Find Me
 {% block script_css %}
 <script>
   $(function () {
-  
+
   });
 </script>
 <style>
@@ -78,9 +78,7 @@ Find Me
 
 <div class="container">
 
-  {% if user.is_authenticated and is_show_modal %}
-    {% include 'main_app/includes/modal_question.html' %}
-  {% endif %}
+  {% include 'main_app/includes/modal_question.html' %}
   
   <div class="row d-flex justify-content-center my-5">
     {% for item in all_items %}

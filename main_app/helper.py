@@ -35,8 +35,8 @@ REFRESH_RECSYS_DAYS = 0
 
 EVENT_TYPE_STRENGTH = {
     'CLICK': 1.0,
-    'LIKE': 2.0, 
-    'VIEW': 3.0,
+    'LIKE': 2.5, 
+    'VIEW': 4.0,
 }
 
 LOCAL_TZ = ZoneInfo('Asia/Bangkok')

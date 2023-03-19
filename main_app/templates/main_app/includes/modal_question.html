@@ -36,7 +36,12 @@
                 error:function(result){}
             });
         });
-        $('#question1').modal('{{is_show_modal}}' === 'True' ? 'show' : 'hide');
+        
+        $('body').on('click','.ask-question',function(){
+            $('#sidebar').offcanvas('hide');
+            $('#question1').modal('show');
+            
+        });
     });
 </script>
 <style>
