@@ -74,6 +74,9 @@
 {% include 'includes/advanced_filter.html' %}
 
 <div class="container">
+
+    {% include 'main_app/includes/modal_question.html' %}
+    
     <div class="row d-flex justify-content-center my-5">
         {% for item in all_items %}
             {% include 'main_app/includes/item.html' %}
