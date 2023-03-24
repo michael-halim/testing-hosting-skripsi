@@ -98,8 +98,6 @@ class HomeView(LoginRequiredMixin, ListView):
         >>> db_tz = recommendations[0].created_at
         >>> print(db_tz.astimezone(local_tz)) # UTC+7 because Asia/Bangkok is UTC+7
         """
-        train_model(is_all_user=False, user_id=self.request.user.id)
-
         print_help(var='TAKE RECOMMENDATION FROM DB', username=self.request.user.username)
         recommendations = ExtendedRecommendation.objects.filter(user_id = self.request.user.id).order_by('rank')
         recommended_product_ids = []
@@ -137,8 +135,13 @@ class HomeView(LoginRequiredMixin, ListView):
         # Select Item with Product Ids In Bulk
         recommendation_item = Item.objects.in_bulk(recommended_product_ids)
 
-        items = [ recommendation_item[product_id] for product_id in recommended_product_ids ]
-        
+        items = []
+        for product_id in recommended_product_ids:
+            if product_id != 0:
+                items.append(recommendation_item[product_id])
+            else:
+                items.append(recommendation_item[product_id + 1])
+
         return items
 
 class SearchView(LoginRequiredMixin, ListView):
@@ -300,7 +303,7 @@ class DetailPostView(LoginRequiredMixin,View):
             has_liked = True
 
         train_model(is_all_user=False, user_id=request.user.id)
-        
+
         context = {
             'item':item,
             'has_liked':has_liked
