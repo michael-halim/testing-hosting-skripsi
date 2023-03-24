@@ -137,8 +137,22 @@ class HomeView(LoginRequiredMixin, ListView):
         # Select Item with Product Ids In Bulk
         recommendation_item = Item.objects.in_bulk(recommended_product_ids)
 
+        print('ERROR IN HERE')
+        print(recommendation_item)
+
+        print('IDS')
+        print(recommended_product_ids)
+
+        print('ONE')
+        print(recommendation_item[recommended_product_ids[0]])
         # Select Recommended Item
-        items = [ recommendation_item[product_id] for product_id in recommended_product_ids ]
+        items = []
+        for product_id in recommended_product_ids:
+            if product_id != 0:
+                items.append(recommendation_item[product_id])
+            else:
+                items.append(recommendation_item[product_id+1])
+        # items = [ recommendation_item[product_id] for product_id in recommended_product_ids ]
         
         return items
 

@@ -78,10 +78,7 @@ def create_random_recommendation(limit = TOTAL_WINDOW):
 def train_als_model(user_id, is_refresh_time_based):
     print_help(var='ALS MODEL', username='TRAIN ALS MODEL')
 
-    today = datetime.now()
-    last_week = today - timedelta(days=today.weekday()+7)
-
-    ucf_logs = Log.objects.filter(timestamp_in__range=[last_week, today])
+    ucf_logs = Log.objects.all().order_by('-timestamp_in')[:30]
 
     # Get ids, product_ids, event_types, timestamp_deltas
     ucf_user_ids, ucf_product_ids, ucf_event_types, ucf_timestamp_deltas = [], [], [], []
@@ -167,12 +164,9 @@ def train_apriori_model(apriori_unique_user_ids):
     
     # Separate ids by user_id 
     # apriori_product_ids = [ [1,2], [3,4,5], [7,8] ]
-    today = datetime.now()
-    last_week = today - timedelta(days=today.weekday()+7)
-
     apriori_product_ids = []
     for _id in apriori_unique_user_ids:
-        user_log_object = Log.objects.filter(event_type= 'VIEW',user_id = _id, timestamp_in__range=[last_week, today])
+        user_log_object = Log.objects.filter(event_type= 'VIEW',user_id = _id).order_by('-timestamp_in')[:30]
         tmp_product = []
         for record in user_log_object:
             tmp_product.append(record.product_id)
@@ -199,10 +193,7 @@ def train_apriori_model(apriori_unique_user_ids):
 def train_weighted_matrix(user_id , total_highest_cbf = TOTAL_HIGHEST_CBF, total_lowest_cbf = TOTAL_LOWEST_CBF):
     print_help(var='WEIGHTED MATRIX MODEL', username='TRAIN WEIGHTED MATRIX')
 
-    today = datetime.now()
-    last_week = today - timedelta(days=today.weekday()+7)
-
-    cbf_logs = Log.objects.filter(user_id = user_id, timestamp_in__range=[last_week, today])
+    cbf_logs = Log.objects.filter(user_id = user_id).order_by('-timestamp_in')[:30]
     # Get product ids, event_types, timestamp_deltas
     cbf_product_ids, cbf_event_types, cbf_timestamp_deltas = [], [], []
     for record in cbf_logs:
